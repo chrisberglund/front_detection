@@ -1,0 +1,13 @@
+.idea/
+cmake-build-debug/
+out/
+CMakeLists.txt
+*.so
+*.o
+*.nc
+/test.r
+input/
+freq/
+/freq.py
+*.csv
+kud/
