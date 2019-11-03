@@ -4,13 +4,15 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_C
+  "/Users/christopherberglund/Projects/sied/cayula.c" "/Users/christopherberglund/Projects/sied/cmake-build-debug/CMakeFiles/sied.dir/cayula.c.o"
   "/Users/christopherberglund/Projects/sied/cohesion.c" "/Users/christopherberglund/Projects/sied/cmake-build-debug/CMakeFiles/sied.dir/cohesion.c.o"
   "/Users/christopherberglund/Projects/sied/contour.c" "/Users/christopherberglund/Projects/sied/cmake-build-debug/CMakeFiles/sied.dir/contour.c.o"
-  "/Users/christopherberglund/Projects/sied/gradient.c" "/Users/christopherberglund/Projects/sied/cmake-build-debug/CMakeFiles/sied.dir/gradient.c.o"
+  "/Users/christopherberglund/Projects/sied/filter.c" "/Users/christopherberglund/Projects/sied/cmake-build-debug/CMakeFiles/sied.dir/filter.c.o"
   "/Users/christopherberglund/Projects/sied/helpers.c" "/Users/christopherberglund/Projects/sied/cmake-build-debug/CMakeFiles/sied.dir/helpers.c.o"
   "/Users/christopherberglund/Projects/sied/histogram.c" "/Users/christopherberglund/Projects/sied/cmake-build-debug/CMakeFiles/sied.dir/histogram.c.o"
   "/Users/christopherberglund/Projects/sied/library.c" "/Users/christopherberglund/Projects/sied/cmake-build-debug/CMakeFiles/sied.dir/library.c.o"
   "/Users/christopherberglund/Projects/sied/locator.c" "/Users/christopherberglund/Projects/sied/cmake-build-debug/CMakeFiles/sied.dir/locator.c.o"
+  "/Users/christopherberglund/Projects/sied/prefilter.c" "/Users/christopherberglund/Projects/sied/cmake-build-debug/CMakeFiles/sied.dir/prefilter.c.o"
   )
 set(CMAKE_C_COMPILER_ID "AppleClang")
 

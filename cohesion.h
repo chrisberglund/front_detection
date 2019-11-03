@@ -1,8 +1,6 @@
-//
-// Created by Christopher Berglund on 11/1/19.
-//
+#include <stdbool.h>
 
 #ifndef SIED_COHESION_H
 #define SIED_COHESION_H
-
+bool isCohesive(const int *window, int width, int threshold);
 #endif //SIED_COHESION_H

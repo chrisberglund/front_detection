@@ -135,18 +135,44 @@ CMakeFiles/sied.dir/contour.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/sied.dir/contour.c.s"
 	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/christopherberglund/Projects/sied/contour.c -o CMakeFiles/sied.dir/contour.c.s
 
-CMakeFiles/sied.dir/gradient.c.o: CMakeFiles/sied.dir/flags.make
-CMakeFiles/sied.dir/gradient.c.o: ../gradient.c
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/christopherberglund/Projects/sied/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building C object CMakeFiles/sied.dir/gradient.c.o"
-	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/sied.dir/gradient.c.o   -c /Users/christopherberglund/Projects/sied/gradient.c
+CMakeFiles/sied.dir/cayula.c.o: CMakeFiles/sied.dir/flags.make
+CMakeFiles/sied.dir/cayula.c.o: ../cayula.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/christopherberglund/Projects/sied/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building C object CMakeFiles/sied.dir/cayula.c.o"
+	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/sied.dir/cayula.c.o   -c /Users/christopherberglund/Projects/sied/cayula.c
 
-CMakeFiles/sied.dir/gradient.c.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/sied.dir/gradient.c.i"
-	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/christopherberglund/Projects/sied/gradient.c > CMakeFiles/sied.dir/gradient.c.i
+CMakeFiles/sied.dir/cayula.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/sied.dir/cayula.c.i"
+	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/christopherberglund/Projects/sied/cayula.c > CMakeFiles/sied.dir/cayula.c.i
 
-CMakeFiles/sied.dir/gradient.c.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/sied.dir/gradient.c.s"
-	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/christopherberglund/Projects/sied/gradient.c -o CMakeFiles/sied.dir/gradient.c.s
+CMakeFiles/sied.dir/cayula.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/sied.dir/cayula.c.s"
+	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/christopherberglund/Projects/sied/cayula.c -o CMakeFiles/sied.dir/cayula.c.s
+
+CMakeFiles/sied.dir/prefilter.c.o: CMakeFiles/sied.dir/flags.make
+CMakeFiles/sied.dir/prefilter.c.o: ../prefilter.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/christopherberglund/Projects/sied/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building C object CMakeFiles/sied.dir/prefilter.c.o"
+	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/sied.dir/prefilter.c.o   -c /Users/christopherberglund/Projects/sied/prefilter.c
+
+CMakeFiles/sied.dir/prefilter.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/sied.dir/prefilter.c.i"
+	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/christopherberglund/Projects/sied/prefilter.c > CMakeFiles/sied.dir/prefilter.c.i
+
+CMakeFiles/sied.dir/prefilter.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/sied.dir/prefilter.c.s"
+	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/christopherberglund/Projects/sied/prefilter.c -o CMakeFiles/sied.dir/prefilter.c.s
+
+CMakeFiles/sied.dir/filter.c.o: CMakeFiles/sied.dir/flags.make
+CMakeFiles/sied.dir/filter.c.o: ../filter.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/christopherberglund/Projects/sied/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building C object CMakeFiles/sied.dir/filter.c.o"
+	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/sied.dir/filter.c.o   -c /Users/christopherberglund/Projects/sied/filter.c
+
+CMakeFiles/sied.dir/filter.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/sied.dir/filter.c.i"
+	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/christopherberglund/Projects/sied/filter.c > CMakeFiles/sied.dir/filter.c.i
+
+CMakeFiles/sied.dir/filter.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/sied.dir/filter.c.s"
+	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/christopherberglund/Projects/sied/filter.c -o CMakeFiles/sied.dir/filter.c.s
 
 # Object files for target sied
 sied_OBJECTS = \
@@ -156,7 +182,9 @@ sied_OBJECTS = \
 "CMakeFiles/sied.dir/cohesion.c.o" \
 "CMakeFiles/sied.dir/locator.c.o" \
 "CMakeFiles/sied.dir/contour.c.o" \
-"CMakeFiles/sied.dir/gradient.c.o"
+"CMakeFiles/sied.dir/cayula.c.o" \
+"CMakeFiles/sied.dir/prefilter.c.o" \
+"CMakeFiles/sied.dir/filter.c.o"
 
 # External object files for target sied
 sied_EXTERNAL_OBJECTS =
@@ -167,10 +195,12 @@ libsied.dylib: CMakeFiles/sied.dir/helpers.c.o
 libsied.dylib: CMakeFiles/sied.dir/cohesion.c.o
 libsied.dylib: CMakeFiles/sied.dir/locator.c.o
 libsied.dylib: CMakeFiles/sied.dir/contour.c.o
-libsied.dylib: CMakeFiles/sied.dir/gradient.c.o
+libsied.dylib: CMakeFiles/sied.dir/cayula.c.o
+libsied.dylib: CMakeFiles/sied.dir/prefilter.c.o
+libsied.dylib: CMakeFiles/sied.dir/filter.c.o
 libsied.dylib: CMakeFiles/sied.dir/build.make
 libsied.dylib: CMakeFiles/sied.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/Users/christopherberglund/Projects/sied/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Linking C shared library libsied.dylib"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/Users/christopherberglund/Projects/sied/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Linking C shared library libsied.dylib"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/sied.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

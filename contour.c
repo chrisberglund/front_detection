@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <math.h>
+#include "helpers.h"
 
 const int ANGLES[9] = {135, 90, 45, 180, 360, 0, 225, 270, 315};
 
@@ -59,57 +60,6 @@ struct gradient sobel(int *window) {
 }
 
 
-/**
- * Finds the bin number north or south of given bin by given distance. This function determines
- * the neighboring bin number by using the ratio between the number of bins in a row difference between the bin numbers
- * of the first bin in a row and the bin of interest. Rounding to the nearest bin number is done.
- * @param bin bin number of the bin of interest
- * @param row row: row number of the bin
- * @param distance number of rows away from the bin of interest to look for neighbor with positive values for north and
- * negative numbers for south
- * @param nBinsInRow pointer to array containing the number of bins in each row
- * @param basebins pointer to array containing the bin number of the first bin of each row
- * @return
- */
-int getNeighborBin(int bin, int row, int distance, const int *nBinsInRow, const int *basebins) {
-    int neighbor;
-    double ratio;
-    ratio = (bin - basebins[row]) / (double) nBinsInRow[row];
-    neighbor = ((int) round(ratio * nBinsInRow[row + distance]) + basebins[row + distance]);
-    return neighbor;
-}
-
-/**
- * Creates a n*n subset of a set of bins centered around a specified bin.
- * @param bin bin to center window on
- * @param row row the center bin is in
- * @param nrows total number of rows in world
- * @param width dimension of window. it must be an odd number
- * @param data data to subset
- * @param nBinsInRow pointer to an array containing the number of bins in each row
- * @param basebins pointer to an array containing the bin number of the first bin of each row
- * @param window pointer to nxn 2-D array to write data values to
- */
-bool getWindow(int bin, int row, int width, const int *data, const int *nBinsInRow,
-               const int *basebins, int *window, int fillValue, bool fill) {
-    int maxDistance = (int) round((width - 1.0) / 2);
-    int nsNeighbor;
-    for (int i = 0; i < width; i++) {
-        nsNeighbor = getNeighborBin(bin, row, i - maxDistance, nBinsInRow, basebins);
-        int neighborRow = row+i-maxDistance;
-        for (int j = 0; j < width; j++) {
-            if (nsNeighbor + (j - maxDistance) < basebins[neighborRow]) {
-                window[i * width + j] = data[basebins[neighborRow] + nBinsInRow[neighborRow] + (j - maxDistance)];
-            } else if (nsNeighbor + (j - maxDistance) - 1 >= basebins[neighborRow + 1]) {
-                window[i * width + j] = data[basebins[neighborRow] + (j - maxDistance) - 1];
-            } else {
-                window[i * width + j] = data[nsNeighbor + (j - maxDistance) - 1];
-            }
-        }
-    }
-    return true;
-}
-
 bool isSharpTurn(struct subnode *tail, int nextTheta) {
     int counter = 0;
     double dtheta = 0;
@@ -140,7 +90,7 @@ double getGradientRatio(int *window) {
 
 }
 
-int followContour(int bin, int row, int *bins, const int *inData, int threshold, const int *nBinsInRow, const int *basebins,
+int followContour(int bin, int row, int *bins, const int *inData, const int *nBinsInRow, const int *basebins,
         int fillValue, struct subnode *tail) {
     int count = 1;
     int nextContourPixel = -1;
@@ -152,7 +102,7 @@ int followContour(int bin, int row, int *bins, const int *inData, int threshold,
     for (int i = 0; i < 9; i++) {
         if (i == 4)
             continue;
-        if (inData[binWindow[i] - 1] == threshold) {
+        if (inData[binWindow[i] - 1] > 0) {
             if (tail -> entryAngle == -999)
                 dtheta = 0;
             else
@@ -219,7 +169,7 @@ int followContour(int bin, int row, int *bins, const int *inData, int threshold,
         tmp -> entryAngle = ANGLES[maxIndex];
         tmp -> bin = nextContourPixel;
         tmp -> next = NULL;
-        count += followContour(nextContourPixel, nextRow, bins, inData, threshold, nBinsInRow, basebins, fillValue, tail);
+        count += followContour(nextContourPixel, nextRow, bins, inData, nBinsInRow, basebins, fillValue, tail);
     }
     free(binWindow);
     return count;
@@ -254,7 +204,7 @@ void trim(struct node *head) {
     }
 }
 
-void contour(int *bins, int *inData, int *outData, int ndata, int threshold, int nrows, const int *nBinsInRow,
+void contour(int *bins, int *inData, int *outData, int ndata, int nrows, const int *nBinsInRow,
              const int *basebins, int fillValue) {
     int row = 0;
     struct node *head = NULL;
@@ -276,7 +226,7 @@ void contour(int *bins, int *inData, int *outData, int ndata, int threshold, int
             tail -> child -> prev  = NULL;
             tail -> child -> entryAngle = -999;
             tail -> child -> bin = i + 1;
-            tail -> length  = followContour(i + 1, row, bins, inData, threshold,  nBinsInRow, basebins, fillValue, tail -> child);
+            tail -> length  = followContour(i + 1, row, bins, inData, nBinsInRow, basebins, fillValue, tail -> child);
         }
         if (i == basebins[row] + nBinsInRow[row] - 1) {
             row++;

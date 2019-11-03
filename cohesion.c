@@ -10,7 +10,7 @@
 #define CRIT_C2 0.90
 #define CRIT_C 0.92
 
-bool cohesion(const int *window, int width, int threshold) {
+bool isCohesive(const int *window, int width, int threshold) {
     int *copy = malloc((width * width) * sizeof(int));
     for (int i = 0; i < width * width; i++) {
         copy[i] = window[i] >= threshold;

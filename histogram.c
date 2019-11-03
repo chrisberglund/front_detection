@@ -127,7 +127,14 @@ bool isTooLarge(const int *window, int width, int threshold) {
     return (((double) i / (width * width) < 0.25) || ((double) i / (width * width)) > 0.75);
 }
 
-bool areTwoBodiesPresent(int *window, int width, int nvalues) {
+/**
+ *
+ * @param window
+ * @param width
+ * @param nvalues
+ * @return threshold value, -1 if unimodal
+ */
+int histogramAnalysis(int *window, int width, int nvalues) {
     double *histogram = getHistogram(window, width * width, nvalues);
     double between, mulow, muhigh, mulowMax = 0, muhighMax = 0, num, dem;
     double nlow = 0, nhigh = 0, nlowMax = 0, nhighMax = 0;
@@ -163,5 +170,9 @@ bool areTwoBodiesPresent(int *window, int width, int nvalues) {
     double within = withinGroupVariance(histogram, mulowMax, muhighMax, nlowMax, nhighMax, threshold, nvalues);
     double theta = maxBetween / (maxBetween + within);
     free(histogram);
-    return (theta >= CRIT_VALUE && !isTooLarge(window, width, threshold));
+    if (theta >= CRIT_VALUE && !isTooLarge(window, width, threshold)) {
+        return threshold;
+    } else {
+        return -1;
+    };
 }

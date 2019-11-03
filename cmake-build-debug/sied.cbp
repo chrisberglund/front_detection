@@ -78,6 +78,12 @@
 				</MakeCommands>
 			</Target>
 		</Build>
+		<Unit filename="/Users/christopherberglund/Projects/sied/cayula.c">
+			<Option target="sied"/>
+		</Unit>
+		<Unit filename="/Users/christopherberglund/Projects/sied/cayula.h">
+			<Option target="sied"/>
+		</Unit>
 		<Unit filename="/Users/christopherberglund/Projects/sied/cohesion.c">
 			<Option target="sied"/>
 		</Unit>
@@ -90,10 +96,10 @@
 		<Unit filename="/Users/christopherberglund/Projects/sied/contour.h">
 			<Option target="sied"/>
 		</Unit>
-		<Unit filename="/Users/christopherberglund/Projects/sied/gradient.c">
+		<Unit filename="/Users/christopherberglund/Projects/sied/filter.c">
 			<Option target="sied"/>
 		</Unit>
-		<Unit filename="/Users/christopherberglund/Projects/sied/gradient.h">
+		<Unit filename="/Users/christopherberglund/Projects/sied/filter.h">
 			<Option target="sied"/>
 		</Unit>
 		<Unit filename="/Users/christopherberglund/Projects/sied/helpers.c">
@@ -118,6 +124,12 @@
 			<Option target="sied"/>
 		</Unit>
 		<Unit filename="/Users/christopherberglund/Projects/sied/locator.h">
+			<Option target="sied"/>
+		</Unit>
+		<Unit filename="/Users/christopherberglund/Projects/sied/prefilter.c">
+			<Option target="sied"/>
+		</Unit>
+		<Unit filename="/Users/christopherberglund/Projects/sied/prefilter.h">
 			<Option target="sied"/>
 		</Unit>
 		<Unit filename="/Users/christopherberglund/Projects/sied/CMakeLists.txt">

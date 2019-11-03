@@ -5,6 +5,6 @@
 #ifndef SIED_LOCATOR_H
 #define SIED_LOCATOR_H
 
-
+void locateEdgePixels(const int *window, int *outWindow, int width, int threshold);
 
 #endif //SIED_LOCATOR_H

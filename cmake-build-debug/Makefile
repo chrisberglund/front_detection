@@ -123,6 +123,33 @@ sied/fast:
 	$(MAKE) -f CMakeFiles/sied.dir/build.make CMakeFiles/sied.dir/build
 .PHONY : sied/fast
 
+cayula.o: cayula.c.o
+
+.PHONY : cayula.o
+
+# target to build an object file
+cayula.c.o:
+	$(MAKE) -f CMakeFiles/sied.dir/build.make CMakeFiles/sied.dir/cayula.c.o
+.PHONY : cayula.c.o
+
+cayula.i: cayula.c.i
+
+.PHONY : cayula.i
+
+# target to preprocess a source file
+cayula.c.i:
+	$(MAKE) -f CMakeFiles/sied.dir/build.make CMakeFiles/sied.dir/cayula.c.i
+.PHONY : cayula.c.i
+
+cayula.s: cayula.c.s
+
+.PHONY : cayula.s
+
+# target to generate assembly for a file
+cayula.c.s:
+	$(MAKE) -f CMakeFiles/sied.dir/build.make CMakeFiles/sied.dir/cayula.c.s
+.PHONY : cayula.c.s
+
 cohesion.o: cohesion.c.o
 
 .PHONY : cohesion.o
@@ -177,32 +204,32 @@ contour.c.s:
 	$(MAKE) -f CMakeFiles/sied.dir/build.make CMakeFiles/sied.dir/contour.c.s
 .PHONY : contour.c.s
 
-gradient.o: gradient.c.o
+filter.o: filter.c.o
 
-.PHONY : gradient.o
+.PHONY : filter.o
 
 # target to build an object file
-gradient.c.o:
-	$(MAKE) -f CMakeFiles/sied.dir/build.make CMakeFiles/sied.dir/gradient.c.o
-.PHONY : gradient.c.o
+filter.c.o:
+	$(MAKE) -f CMakeFiles/sied.dir/build.make CMakeFiles/sied.dir/filter.c.o
+.PHONY : filter.c.o
 
-gradient.i: gradient.c.i
+filter.i: filter.c.i
 
-.PHONY : gradient.i
+.PHONY : filter.i
 
 # target to preprocess a source file
-gradient.c.i:
-	$(MAKE) -f CMakeFiles/sied.dir/build.make CMakeFiles/sied.dir/gradient.c.i
-.PHONY : gradient.c.i
+filter.c.i:
+	$(MAKE) -f CMakeFiles/sied.dir/build.make CMakeFiles/sied.dir/filter.c.i
+.PHONY : filter.c.i
 
-gradient.s: gradient.c.s
+filter.s: filter.c.s
 
-.PHONY : gradient.s
+.PHONY : filter.s
 
 # target to generate assembly for a file
-gradient.c.s:
-	$(MAKE) -f CMakeFiles/sied.dir/build.make CMakeFiles/sied.dir/gradient.c.s
-.PHONY : gradient.c.s
+filter.c.s:
+	$(MAKE) -f CMakeFiles/sied.dir/build.make CMakeFiles/sied.dir/filter.c.s
+.PHONY : filter.c.s
 
 helpers.o: helpers.c.o
 
@@ -312,6 +339,33 @@ locator.c.s:
 	$(MAKE) -f CMakeFiles/sied.dir/build.make CMakeFiles/sied.dir/locator.c.s
 .PHONY : locator.c.s
 
+prefilter.o: prefilter.c.o
+
+.PHONY : prefilter.o
+
+# target to build an object file
+prefilter.c.o:
+	$(MAKE) -f CMakeFiles/sied.dir/build.make CMakeFiles/sied.dir/prefilter.c.o
+.PHONY : prefilter.c.o
+
+prefilter.i: prefilter.c.i
+
+.PHONY : prefilter.i
+
+# target to preprocess a source file
+prefilter.c.i:
+	$(MAKE) -f CMakeFiles/sied.dir/build.make CMakeFiles/sied.dir/prefilter.c.i
+.PHONY : prefilter.c.i
+
+prefilter.s: prefilter.c.s
+
+.PHONY : prefilter.s
+
+# target to generate assembly for a file
+prefilter.c.s:
+	$(MAKE) -f CMakeFiles/sied.dir/build.make CMakeFiles/sied.dir/prefilter.c.s
+.PHONY : prefilter.c.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -321,15 +375,18 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... edit_cache"
 	@echo "... sied"
+	@echo "... cayula.o"
+	@echo "... cayula.i"
+	@echo "... cayula.s"
 	@echo "... cohesion.o"
 	@echo "... cohesion.i"
 	@echo "... cohesion.s"
 	@echo "... contour.o"
 	@echo "... contour.i"
 	@echo "... contour.s"
-	@echo "... gradient.o"
-	@echo "... gradient.i"
-	@echo "... gradient.s"
+	@echo "... filter.o"
+	@echo "... filter.i"
+	@echo "... filter.s"
 	@echo "... helpers.o"
 	@echo "... helpers.i"
 	@echo "... helpers.s"
@@ -342,6 +399,9 @@ help:
 	@echo "... locator.o"
 	@echo "... locator.i"
 	@echo "... locator.s"
+	@echo "... prefilter.o"
+	@echo "... prefilter.i"
+	@echo "... prefilter.s"
 .PHONY : help
 
 

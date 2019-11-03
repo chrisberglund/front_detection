@@ -74,12 +74,12 @@ preinstall:
 CMakeFiles/sied.dir/all:
 	$(MAKE) -f CMakeFiles/sied.dir/build.make CMakeFiles/sied.dir/depend
 	$(MAKE) -f CMakeFiles/sied.dir/build.make CMakeFiles/sied.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/Users/christopherberglund/Projects/sied/cmake-build-debug/CMakeFiles --progress-num=1,2,3,4,5,6,7,8 "Built target sied"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/Users/christopherberglund/Projects/sied/cmake-build-debug/CMakeFiles --progress-num=1,2,3,4,5,6,7,8,9,10 "Built target sied"
 .PHONY : CMakeFiles/sied.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/sied.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /Users/christopherberglund/Projects/sied/cmake-build-debug/CMakeFiles 8
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/christopherberglund/Projects/sied/cmake-build-debug/CMakeFiles 10
 	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/sied.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /Users/christopherberglund/Projects/sied/cmake-build-debug/CMakeFiles 0
 .PHONY : CMakeFiles/sied.dir/rule

@@ -6,11 +6,21 @@
 
 #IncludeRegexTransform: 
 
-/Users/christopherberglund/Projects/sied/locator.c
+/Users/christopherberglund/Projects/sied/filter.c
 stdlib.h
 -
-locator.h
-/Users/christopherberglund/Projects/sied/locator.h
+math.h
+-
+stdbool.h
+-
+stdio.h
+-
+filter.h
+/Users/christopherberglund/Projects/sied/filter.h
+helpers.h
+/Users/christopherberglund/Projects/sied/helpers.h
 
-/Users/christopherberglund/Projects/sied/locator.h
+/Users/christopherberglund/Projects/sied/filter.h
+
+/Users/christopherberglund/Projects/sied/helpers.h
 
