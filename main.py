@@ -3,7 +3,7 @@ import os
 from netCDF4 import Dataset
 import numpy as np
 import pandas as pd
-from multiprocessing import Pool
+from multiprocessing import Pool, cpu_count
 
 
 def boa(total_bins, nrows, fill_value, rows, bins, data, weights, date, chlor_a=False, glob=False):
@@ -142,7 +142,7 @@ def map_files(directory, latmin, latmax, lonmin, lonmax):
         if file.endswith(".nc"):
             files.append({"file": directory + "/" + file, "latmin": latmin,
                           "latmax": latmax, "lonmin": lonmin, "lonmax": lonmax, "glob": glob})
-    pool = Pool(1)
+    pool = Pool(cpu_count() - 1)
     pool.map(map_file, files)
 
 
