@@ -194,10 +194,10 @@ int histogramAnalysis(int *window, int width, int nvalues) {
             muhighMax = muhigh;
         }
     }
-    /*
+
     if (isTooLarge(window, width, threshold))
         return -1;
-    */
+
     double within = withinGroupVariance(histogram, mulowMax, muhighMax, nlowMax, nhighMax, threshold, nvalues);
     double theta = maxBetween / (maxBetween + within);
     //printf("between: %f, within: %f \n, nlowmax: %f, nhighmax: %f mulowmax: %f, muhighmax: %f, \n", maxBetween, within, nlowMax,
