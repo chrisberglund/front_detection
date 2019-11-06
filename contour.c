@@ -5,6 +5,7 @@
 #include "contour.h"
 #include <stdlib.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <math.h>
 #include "helpers.h"
 
@@ -96,13 +97,14 @@ int followContour(int bin, int row, int *bins, const int *inData, const int *nBi
     int nextContourPixel = -1;
     int minDTheta = 180;
     int nextAngle = 0;
-    int dtheta;
+    int dtheta = 0;
     int *binWindow = malloc(9 * sizeof(int));
     getWindow(bin, row, 3, bins, nBinsInRow, basebins, binWindow, fillValue, false);
     for (int i = 0; i < 9; i++) {
         if (i == 4)
             continue;
         if (inData[binWindow[i] - 1] > 0) {
+            printf("test \n");
             if (tail -> entryAngle == -999)
                 dtheta = 0;
             else
@@ -116,7 +118,6 @@ int followContour(int bin, int row, int *bins, const int *inData, const int *nBi
             }
         }
     }
-
     if (isSharpTurn(tail, minDTheta)) {
         nextContourPixel = -1;
     }
@@ -140,13 +141,15 @@ int followContour(int bin, int row, int *bins, const int *inData, const int *nBi
                     default:
                         break;
                 }
-                ratio = getGradientRatio(dataWindow);
+                ratio = 0;
+                //ratio = getGradientRatio(dataWindow);
                 if (ratio > maxRatio) {
                     maxRatio = ratio;
                     maxIndex = i * 3 + j;
                 }
             }
         }
+
         if (maxRatio > 0.7) {
             nextAngle = ANGLES[maxIndex];
             nextContourPixel = binWindow[maxIndex];
@@ -172,6 +175,7 @@ int followContour(int bin, int row, int *bins, const int *inData, const int *nBi
         count += followContour(nextContourPixel, nextRow, bins, inData, nBinsInRow, basebins, fillValue, tail);
     }
     free(binWindow);
+    printf("count: %d \n", count);
     return count;
 }
 
@@ -204,6 +208,18 @@ void trim(struct node *head) {
     }
 }
 
+/**
+ * Implements a contour following algorithm. Goes through each bin, and if the bin has been previously detected as
+ * an edge, then follow neighboring bin
+ * @param bins
+ * @param inData
+ * @param outData
+ * @param ndata
+ * @param nrows
+ * @param nBinsInRow
+ * @param basebins
+ * @param fillValue
+ */
 void contour(int *bins, int *inData, int *outData, int ndata, int nrows, const int *nBinsInRow,
              const int *basebins, int fillValue) {
     int row = 0;
@@ -214,10 +230,13 @@ void contour(int *bins, int *inData, int *outData, int ndata, int nrows, const i
     tail = head;
     for (int i = 0; i < ndata; i++) {
         if (row < 2 || row > nrows - 3) {
+            if (i == basebins[row] + nBinsInRow[row] - 1) {
+                row++;
+            }
             continue;
         }
 
-        if (inData[i]) {
+        if (inData[i] > 0) {
             tmp = (struct node*) malloc(sizeof(struct node));
             tail -> next = tmp;
             tmp -> prev = tail;
@@ -232,6 +251,7 @@ void contour(int *bins, int *inData, int *outData, int ndata, int nrows, const i
             row++;
         }
     }
+
     struct node *current = head;
     struct subnode *child = NULL;
     struct subnode *tmpchild = NULL;
@@ -248,4 +268,5 @@ void contour(int *bins, int *inData, int *outData, int ndata, int nrows, const i
         free(current);
         current = tmp;
     }
+    free(head);
 }

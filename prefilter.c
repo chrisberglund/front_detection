@@ -85,7 +85,11 @@ void createFullBinArray(int totalBins, int nDataBins, int nrows, const int *data
     double minValue = 999;
 
     for (int i = 0; i < nDataBins; i++) {
-        meanData[i] = chlora ? log(inData[i] / weights[i]) : inData[i] / weights[i];
+        if (inData[i] == fillValue) {
+            meanData[i] = fillValue;
+            continue;
+        }
+        meanData[i] = chlora ? log10(inData[i] / weights[i]) : inData[i] / weights[i];
         if (meanData[i] < minValue)
             minValue = meanData[i];
         if (meanData[i] > maxValue)
@@ -94,7 +98,12 @@ void createFullBinArray(int totalBins, int nDataBins, int nrows, const int *data
 
 
     for (int i = 0; i < nDataBins; i++) {
-        outData[dataBins[i] - 1] = (int) ceil((meanData[i] + fabs(minValue)) / (maxValue + fabs(minValue)) * 255);
+        if (meanData[i] == fillValue)
+            outData[dataBins[i] - 1] = fillValue;
+        else {
+            double ratio = (meanData[i] + fabs(minValue)) / fabs(maxValue - minValue);
+            outData[dataBins[i] - 1] = (int) floor(ratio * 255);
+        }
     }
     free(meanData);
     printf("end");

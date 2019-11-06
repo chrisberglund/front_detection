@@ -120,12 +120,17 @@ void medianFilter(int *bins, int *data, int *filteredData, int nbins, int nrows,
             filteredData[i] = fillValue;
             continue;
         }
-        getWindow(bins[i], row, 3, data, nBinsInRow, basebins, threeWindow, fillValue, false);
-        int isThreePeak = isWindowExtrema(3, threeWindow);
-        if (isThreePeak) {
-            value = applyMedianFilter(threeWindow, 3);
+        bool isValid = getWindow(bins[i], row, 3, data, nBinsInRow, basebins, threeWindow, fillValue, true);
+        if (!isValid) {
+            filteredData[i] = fillValue;
+
+        } else {
+            int isThreePeak = isWindowExtrema(3, threeWindow);
+            if (isThreePeak) {
+                value = applyMedianFilter(threeWindow, 3);
+            }
+            filteredData[i] = value;
         }
-        filteredData[i] = value;
         if (i == basebins[row] + nBinsInRow[row] - 1) {
             row++;
         }

@@ -285,33 +285,6 @@ histogram.c.s:
 	$(MAKE) -f CMakeFiles/sied.dir/build.make CMakeFiles/sied.dir/histogram.c.s
 .PHONY : histogram.c.s
 
-library.o: library.c.o
-
-.PHONY : library.o
-
-# target to build an object file
-library.c.o:
-	$(MAKE) -f CMakeFiles/sied.dir/build.make CMakeFiles/sied.dir/library.c.o
-.PHONY : library.c.o
-
-library.i: library.c.i
-
-.PHONY : library.i
-
-# target to preprocess a source file
-library.c.i:
-	$(MAKE) -f CMakeFiles/sied.dir/build.make CMakeFiles/sied.dir/library.c.i
-.PHONY : library.c.i
-
-library.s: library.c.s
-
-.PHONY : library.s
-
-# target to generate assembly for a file
-library.c.s:
-	$(MAKE) -f CMakeFiles/sied.dir/build.make CMakeFiles/sied.dir/library.c.s
-.PHONY : library.c.s
-
 locator.o: locator.c.o
 
 .PHONY : locator.o
@@ -393,9 +366,6 @@ help:
 	@echo "... histogram.o"
 	@echo "... histogram.i"
 	@echo "... histogram.s"
-	@echo "... library.o"
-	@echo "... library.i"
-	@echo "... library.s"
 	@echo "... locator.o"
 	@echo "... locator.i"
 	@echo "... locator.s"

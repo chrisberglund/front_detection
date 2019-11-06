@@ -114,12 +114,6 @@
 		<Unit filename="/Users/christopherberglund/Projects/sied/histogram.h">
 			<Option target="sied"/>
 		</Unit>
-		<Unit filename="/Users/christopherberglund/Projects/sied/library.c">
-			<Option target="sied"/>
-		</Unit>
-		<Unit filename="/Users/christopherberglund/Projects/sied/library.h">
-			<Option target="sied"/>
-		</Unit>
 		<Unit filename="/Users/christopherberglund/Projects/sied/locator.c">
 			<Option target="sied"/>
 		</Unit>

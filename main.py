@@ -29,7 +29,6 @@ def boa(total_bins, nrows, fill_value, rows, bins, data, weights, date, chlor_a=
 
     bins_array_type = ctypes.c_int * len(bins)
     lats = (ctypes.c_double * total_bins)()
-
     lons = (ctypes.c_double * total_bins)()
     rows = (ctypes.c_int * len(rows))(*rows)
     data_array = (ctypes.c_double * len(data))(*data)
@@ -91,12 +90,11 @@ def map_bins(dataset, latmin, latmax, lonmin, lonmax, glob):
     else:
         total_bins, nrows, bins, data, weights, date = get_params_modis(dataset, "chlor_a")
         rows = []
-    df = boa(total_bins, nrows, 0, rows, bins, data, weights, date, True, glob)
+    df = boa(total_bins, nrows, -999, rows, bins, data, weights, date, True, glob)
     print("Cropping")
     df = df[(df.Latitude >= latmin) & (df.Latitude <= latmax) &
             (df.Longitude >= lonmin) & (df.Longitude <= lonmax)]
     df = df[df['Data'] > -999]
-    df = df[df['Data'] < 40]
     return df
 
 

@@ -29,9 +29,6 @@ CMakeFiles/sied.dir/histogram.c.o: ../helpers.h
 CMakeFiles/sied.dir/histogram.c.o: ../histogram.c
 CMakeFiles/sied.dir/histogram.c.o: ../histogram.h
 
-CMakeFiles/sied.dir/library.c.o: ../library.c
-CMakeFiles/sied.dir/library.c.o: ../library.h
-
 CMakeFiles/sied.dir/locator.c.o: ../locator.c
 CMakeFiles/sied.dir/locator.c.o: ../locator.h
 

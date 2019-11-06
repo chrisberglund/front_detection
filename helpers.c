@@ -141,5 +141,12 @@ bool getWindow(int bin, int row, int width, const int *data, const int *nBinsInR
             }
         }
     }
+
+    for (int i = 0; i < width * width; i++) {
+        if (window[i] == -999 && fill){
+            return false;
+        }
+    }
+
     return true;
 }

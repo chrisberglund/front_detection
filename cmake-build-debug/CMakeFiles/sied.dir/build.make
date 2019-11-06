@@ -57,22 +57,9 @@ include CMakeFiles/sied.dir/progress.make
 # Include the compile flags for this target's objects.
 include CMakeFiles/sied.dir/flags.make
 
-CMakeFiles/sied.dir/library.c.o: CMakeFiles/sied.dir/flags.make
-CMakeFiles/sied.dir/library.c.o: ../library.c
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/christopherberglund/Projects/sied/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building C object CMakeFiles/sied.dir/library.c.o"
-	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/sied.dir/library.c.o   -c /Users/christopherberglund/Projects/sied/library.c
-
-CMakeFiles/sied.dir/library.c.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/sied.dir/library.c.i"
-	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/christopherberglund/Projects/sied/library.c > CMakeFiles/sied.dir/library.c.i
-
-CMakeFiles/sied.dir/library.c.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/sied.dir/library.c.s"
-	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/christopherberglund/Projects/sied/library.c -o CMakeFiles/sied.dir/library.c.s
-
 CMakeFiles/sied.dir/histogram.c.o: CMakeFiles/sied.dir/flags.make
 CMakeFiles/sied.dir/histogram.c.o: ../histogram.c
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/christopherberglund/Projects/sied/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building C object CMakeFiles/sied.dir/histogram.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/christopherberglund/Projects/sied/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building C object CMakeFiles/sied.dir/histogram.c.o"
 	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/sied.dir/histogram.c.o   -c /Users/christopherberglund/Projects/sied/histogram.c
 
 CMakeFiles/sied.dir/histogram.c.i: cmake_force
@@ -85,7 +72,7 @@ CMakeFiles/sied.dir/histogram.c.s: cmake_force
 
 CMakeFiles/sied.dir/helpers.c.o: CMakeFiles/sied.dir/flags.make
 CMakeFiles/sied.dir/helpers.c.o: ../helpers.c
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/christopherberglund/Projects/sied/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building C object CMakeFiles/sied.dir/helpers.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/christopherberglund/Projects/sied/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building C object CMakeFiles/sied.dir/helpers.c.o"
 	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/sied.dir/helpers.c.o   -c /Users/christopherberglund/Projects/sied/helpers.c
 
 CMakeFiles/sied.dir/helpers.c.i: cmake_force
@@ -98,7 +85,7 @@ CMakeFiles/sied.dir/helpers.c.s: cmake_force
 
 CMakeFiles/sied.dir/cohesion.c.o: CMakeFiles/sied.dir/flags.make
 CMakeFiles/sied.dir/cohesion.c.o: ../cohesion.c
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/christopherberglund/Projects/sied/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building C object CMakeFiles/sied.dir/cohesion.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/christopherberglund/Projects/sied/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building C object CMakeFiles/sied.dir/cohesion.c.o"
 	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/sied.dir/cohesion.c.o   -c /Users/christopherberglund/Projects/sied/cohesion.c
 
 CMakeFiles/sied.dir/cohesion.c.i: cmake_force
@@ -111,7 +98,7 @@ CMakeFiles/sied.dir/cohesion.c.s: cmake_force
 
 CMakeFiles/sied.dir/locator.c.o: CMakeFiles/sied.dir/flags.make
 CMakeFiles/sied.dir/locator.c.o: ../locator.c
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/christopherberglund/Projects/sied/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building C object CMakeFiles/sied.dir/locator.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/christopherberglund/Projects/sied/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building C object CMakeFiles/sied.dir/locator.c.o"
 	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/sied.dir/locator.c.o   -c /Users/christopherberglund/Projects/sied/locator.c
 
 CMakeFiles/sied.dir/locator.c.i: cmake_force
@@ -124,7 +111,7 @@ CMakeFiles/sied.dir/locator.c.s: cmake_force
 
 CMakeFiles/sied.dir/contour.c.o: CMakeFiles/sied.dir/flags.make
 CMakeFiles/sied.dir/contour.c.o: ../contour.c
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/christopherberglund/Projects/sied/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building C object CMakeFiles/sied.dir/contour.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/christopherberglund/Projects/sied/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building C object CMakeFiles/sied.dir/contour.c.o"
 	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/sied.dir/contour.c.o   -c /Users/christopherberglund/Projects/sied/contour.c
 
 CMakeFiles/sied.dir/contour.c.i: cmake_force
@@ -137,7 +124,7 @@ CMakeFiles/sied.dir/contour.c.s: cmake_force
 
 CMakeFiles/sied.dir/cayula.c.o: CMakeFiles/sied.dir/flags.make
 CMakeFiles/sied.dir/cayula.c.o: ../cayula.c
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/christopherberglund/Projects/sied/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building C object CMakeFiles/sied.dir/cayula.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/christopherberglund/Projects/sied/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building C object CMakeFiles/sied.dir/cayula.c.o"
 	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/sied.dir/cayula.c.o   -c /Users/christopherberglund/Projects/sied/cayula.c
 
 CMakeFiles/sied.dir/cayula.c.i: cmake_force
@@ -150,7 +137,7 @@ CMakeFiles/sied.dir/cayula.c.s: cmake_force
 
 CMakeFiles/sied.dir/prefilter.c.o: CMakeFiles/sied.dir/flags.make
 CMakeFiles/sied.dir/prefilter.c.o: ../prefilter.c
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/christopherberglund/Projects/sied/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building C object CMakeFiles/sied.dir/prefilter.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/christopherberglund/Projects/sied/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building C object CMakeFiles/sied.dir/prefilter.c.o"
 	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/sied.dir/prefilter.c.o   -c /Users/christopherberglund/Projects/sied/prefilter.c
 
 CMakeFiles/sied.dir/prefilter.c.i: cmake_force
@@ -163,7 +150,7 @@ CMakeFiles/sied.dir/prefilter.c.s: cmake_force
 
 CMakeFiles/sied.dir/filter.c.o: CMakeFiles/sied.dir/flags.make
 CMakeFiles/sied.dir/filter.c.o: ../filter.c
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/christopherberglund/Projects/sied/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building C object CMakeFiles/sied.dir/filter.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/christopherberglund/Projects/sied/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building C object CMakeFiles/sied.dir/filter.c.o"
 	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/sied.dir/filter.c.o   -c /Users/christopherberglund/Projects/sied/filter.c
 
 CMakeFiles/sied.dir/filter.c.i: cmake_force
@@ -176,7 +163,6 @@ CMakeFiles/sied.dir/filter.c.s: cmake_force
 
 # Object files for target sied
 sied_OBJECTS = \
-"CMakeFiles/sied.dir/library.c.o" \
 "CMakeFiles/sied.dir/histogram.c.o" \
 "CMakeFiles/sied.dir/helpers.c.o" \
 "CMakeFiles/sied.dir/cohesion.c.o" \
@@ -189,7 +175,6 @@ sied_OBJECTS = \
 # External object files for target sied
 sied_EXTERNAL_OBJECTS =
 
-libsied.dylib: CMakeFiles/sied.dir/library.c.o
 libsied.dylib: CMakeFiles/sied.dir/histogram.c.o
 libsied.dylib: CMakeFiles/sied.dir/helpers.c.o
 libsied.dylib: CMakeFiles/sied.dir/cohesion.c.o
@@ -200,7 +185,7 @@ libsied.dylib: CMakeFiles/sied.dir/prefilter.c.o
 libsied.dylib: CMakeFiles/sied.dir/filter.c.o
 libsied.dylib: CMakeFiles/sied.dir/build.make
 libsied.dylib: CMakeFiles/sied.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/Users/christopherberglund/Projects/sied/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Linking C shared library libsied.dylib"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/Users/christopherberglund/Projects/sied/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Linking C shared library libsied.dylib"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/sied.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

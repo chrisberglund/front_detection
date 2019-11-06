@@ -16,44 +16,58 @@ void cayula(int totalBins, int nDataBins, int nrows, int fillValue,
     int *nBinsInRow = (int *) malloc(nrows * sizeof(int));
     int *basebins = (int *) malloc(nrows * sizeof(int));
     int *data = (int *) malloc(totalBins * sizeof(int));
+    int *filteredData = (int *) malloc(totalBins * sizeof(int));
     printf("Start \n");
     createFullBinArray(totalBins, nDataBins, nrows, dataBins, fillValue,
                        bins, inData, weights, lats, lons, nBinsInRow, basebins, data, chlora);
+
     printf("Initializing done \n");
-    free(inData);
-    int *filteredData = (int *) malloc(totalBins * sizeof(int));
+
     medianFilter(bins, data, filteredData, totalBins, nrows, nBinsInRow, basebins, fillValue);
+
+
     printf("Median filter done \n");
 
     //int *edgePixels = (int *) malloc(totalBins * sizeof(int));
+
+    for (int i = 0; i < totalBins; i++) {
+        if (data[i] == fillValue) {
+            outData[i] = fillValue;
+        }
+        else {
+            outData[i] = 0;
+        }
+    }
+    free(data);
     for (int i = 15; i < nrows - 16; i += 16) {
         for (int j = 15; j < nBinsInRow[i] - 16; j += 16) {
-            printf("%d \n", i);
+            if (nBinsInRow[i] < 32)
+                continue;
             int *window = (int *) malloc(1024 * sizeof(int));
             int *binWindow = (int *) malloc(1024 * sizeof(int));
-            getWindow(basebins[i] + j, i, 32, data, nBinsInRow, basebins, window, fillValue, false);
+            getWindow(basebins[i] + j, i, 32, filteredData, nBinsInRow, basebins, window, fillValue, false);
             getWindow(basebins[i] + j, i, 32, bins, nBinsInRow, basebins, binWindow, fillValue, false);
-            int threshold = histogramAnalysis(window, 32, 255);
-            /*if (threshold > 0) {
+            int threshold = histogramAnalysis(window, 32, 256);
+            if (threshold > 0) {
                 if (isCohesive(window, 32, threshold)) {
                     int *edgeWindow = malloc(1024 * sizeof(int));
                     locateEdgePixels(window, edgeWindow, 32, threshold);
                     for (int k = 0; k < 32; k++) {
                         for (int m = 0; m < 32; m++) {
-                            if (window[i * 32 + j] == threshold)
-                                edgePixels[binWindow[i * 32 + j] - 1] = edgeWindow[i * 32 + j];
+                            if (edgeWindow[k * 32 + m] == threshold)
+                                outData[binWindow[k * 32 + m] - 1] = edgeWindow[k * 32 + m];
                         }
                     }
                     free(edgeWindow);
                 }
-            }*/
+            }
             free(window);
             free(binWindow);
         }
     }
-    free(data);
     printf("Edgeing done \n");
     //contour(bins, edgePixels, outData, totalBins, nrows, nBinsInRow, basebins, fillValue);
+    //free(edgePixels);
     printf("Contouring done \n");
     free(bins);
     free(nBinsInRow);

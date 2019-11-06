@@ -5,8 +5,10 @@
 #include "histogram.h"
 #include <stdlib.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <math.h>
 #include "helpers.h"
+
 
 #define CRIT_VALUE 0.7
 
@@ -18,15 +20,22 @@
  * @return pointer to an array containing all the bins of the histogram. Caller is responsible for freeing
  */
 double *getHistogram(const int *data, int npixels, int nbins) {
-    int *occurrence = malloc(sizeof(int) * nbins);
-    double *histogram = malloc(sizeof(double) * nbins);
+    int *occurrence = (int *) malloc(sizeof(int) * nbins);
+    double *histogram = (double *) malloc(sizeof(double) * nbins);
     for (int i = 0; i < nbins; i++) occurrence[i] = 0;
     for (int i = 0; i < nbins; i++) histogram[i] = 0;
+    int nvalid = 0;
     for (int i = 0; i < npixels; i++) {
-        occurrence[data[i] - 1]++;
+        if (data[i] != -999) {
+            occurrence[data[i]]++;
+            nvalid++;
+        }
     }
     for (int i = 0; i < nbins; i++) {
-        histogram[i] = (double) occurrence[i] / npixels;
+        if (nvalid > 0)
+            histogram[i] = (double) occurrence[i] / nvalid;
+        else
+            histogram[i] = 0;
     }
     free(occurrence);
     return histogram;
@@ -67,16 +76,19 @@ double mean(const double *histogram, int threshold, bool high, int nvalues) {
  */
 double groupVariance(const double *histogram, double mu, int threshold, bool high, int nvalues) {
     double num = 0;
+    double dem = 0;
     if (high) {
-        for (int i = nvalues - 1; i >= threshold - 1; i--) {
-            num += (i + 1) - mu * histogram[i];
+        for (int i = threshold; i < 256; i++) {
+            num += pow(i - mu, 2) * histogram[i];
+            dem += histogram[i];
         }
-        return num / (nvalues - threshold + 1);
+        return num / (256 - threshold);
     } else {
-        for (int i = 0; i < threshold - 1; i++) {
-            num += (i + 1) - mu * histogram[i];
+        for (int i = 0; i < threshold; i++) {
+            num += pow(i - mu, 2) * histogram[i];
+            dem += histogram[i];
         }
-        return num / (threshold - 1);
+        return num / dem;
     }
 }
 
@@ -96,7 +108,7 @@ withinGroupVariance(const double *histogram, double mulow, double muhigh, double
                     int nvalues) {
     double lowGroup = groupVariance(histogram, mulow, threshold, false, nvalues) * nlow / (nlow + nhigh);
     double highGroup = groupVariance(histogram, muhigh, threshold, true, nvalues) * nhigh / (nlow + nhigh);
-    return lowGroup + highGroup;
+    return lowGroup * nlow/(nlow + nhigh) + highGroup * nhigh/(nlow + nhigh);
 }
 
 /**
@@ -124,6 +136,7 @@ bool isTooLarge(const int *window, int width, int threshold) {
     while (window[i] < threshold) {
         i++;
     }
+    free(copy);
     return (((double) i / (width * width) < 0.25) || ((double) i / (width * width)) > 0.75);
 }
 
@@ -136,30 +149,44 @@ bool isTooLarge(const int *window, int width, int threshold) {
  */
 int histogramAnalysis(int *window, int width, int nvalues) {
     double *histogram = getHistogram(window, width * width, nvalues);
-    double between, mulow, muhigh, mulowMax = 0, muhighMax = 0, num, dem;
+    double between, mulow, muhigh, mulowMax, muhighMax, num, dem;
     double nlow = 0, nhigh = 0, nlowMax = 0, nhighMax = 0;
-    double maxBetween = -1;
-    int threshold = -1;
+    double maxBetween;
+    int threshold;
     for (int i = 1; i < nvalues - 1; i++) {  //Assuming 0 or nvalues can't be the best threshold
+        nlow = 0;
+        nhigh = 0;
         num = 0;
         dem = 0;
-        for (int j = 0; j < i; i++) {
-            nlow += histogram[i];
-            num += (i + 1) * histogram[i];
-            dem += histogram[i];
+        for (int j = 0; j < i; j++) {
+            nlow += histogram[j];
+            num += (j) * histogram[j];
+            dem += histogram[j];
         }
+        if (dem == 0)
+            continue;
         mulow = num / dem;
         num = 0;
         dem = 0;
-        for (int j = nvalues - 1; j >= i; i--) {
-            nhigh += histogram[i];
-            num += (i + 1) * histogram[i];
-            dem += histogram[i];
+        for (int j = i; j < nvalues; j++) {
+            nhigh += histogram[j];
+            num += (j) * histogram[j];
+            dem += histogram[j];
         }
+        if (dem == 0)
+            continue;
         muhigh = num / dem;
         between = betweenGroupVariance(mulow, muhigh, nlow, nhigh);
+        if (i == 1) {
+            threshold = i;
+            maxBetween = between;
+            nlowMax = nlow;
+            nhighMax = nhigh;
+            mulowMax = mulow;
+            muhighMax = muhigh;
+        }
         if (between > maxBetween) {
-            threshold = i + 1;
+            threshold = i;
             maxBetween = between;
             nlowMax = nlow;
             nhighMax = nhigh;
@@ -167,12 +194,18 @@ int histogramAnalysis(int *window, int width, int nvalues) {
             muhighMax = muhigh;
         }
     }
+    /*
+    if (isTooLarge(window, width, threshold))
+        return -1;
+    */
     double within = withinGroupVariance(histogram, mulowMax, muhighMax, nlowMax, nhighMax, threshold, nvalues);
     double theta = maxBetween / (maxBetween + within);
+    //printf("between: %f, within: %f \n, nlowmax: %f, nhighmax: %f mulowmax: %f, muhighmax: %f, \n", maxBetween, within, nlowMax,
+    //        nhighMax, mulowMax, muhighMax);
     free(histogram);
     if (theta >= CRIT_VALUE && !isTooLarge(window, width, threshold)) {
         return threshold;
     } else {
         return -1;
-    };
+    }
 }

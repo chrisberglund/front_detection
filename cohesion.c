@@ -4,6 +4,7 @@
 
 #include <stdbool.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include "cohesion.h"
 
 #define CRIT_C1 0.90
@@ -21,17 +22,18 @@ bool isCohesive(const int *window, int width, int threshold) {
     double t2 = 0;
     for (int i = 1; i < width - 1; i++) {
         for (int j = 1; j < width - 1; j++) {
-            if (window[i * width + j] == 0) {
-                if (window[i * width + j] == window[(i - 1) * width + j]) r1++;
-                if (window[i * width + j] == window[(i + 1) * width + j]) r1++;
-                if (window[i * width + j] == window[i * width + (j - 1)]) r1++;
-                if (window[i * width + j] == window[i * width + (j + 1)]) r1++;
+            //printf("%d \n", window[i * width + j]);
+            if (copy[i * width + j] == 0) {
+                if (copy[i * width + j] == copy[(i - 1) * width + j]) r1++;
+                if (copy[i * width + j] == copy[(i + 1) * width + j]) r1++;
+                if (copy[i * width + j] == copy[i * width + (j - 1)]) r1++;
+                if (copy[i * width + j] == copy[i * width + (j + 1)]) r1++;
                 t1 += 4;
-            } else if (window[i * width + j] == 1) {
-                if (window[i * width + j] == window[(i - 1) * width + j]) r2++;
-                if (window[i * width + j] == window[(i + 1) * width + j]) r2++;
-                if (window[i * width + j] == window[i * width + (j - 1)]) r2++;
-                if (window[i * width + j] == window[i * width + (j + 1)]) r2++;
+            } else if (copy[i * width + j] == 1) {
+                if (copy[i * width + j] == copy[(i - 1) * width + j]) r2++;
+                if (copy[i * width + j] == copy[(i + 1) * width + j]) r2++;
+                if (copy[i * width + j] == copy[i * width + (j - 1)]) r2++;
+                if (copy[i * width + j] == copy[i * width + (j + 1)]) r2++;
                 t2 += 4;
             }
         }
