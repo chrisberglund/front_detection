@@ -41,7 +41,7 @@ void cayula(int totalBins, int nDataBins, int nrows, int fillValue,
     free(data);
     for (int i = 15; i < nrows - 16; i += 16) {
         for (int j = 15; j < nBinsInRow[i] - 16; j += 16) {
-            if (nBinsInRow[i] < 32)
+            if (nBinsInRow[i - 15] < 32 || nBinsInRow[i + 16] < 32)
                 continue;
             int *window = (int *) malloc(1024 * sizeof(int));
             int *binWindow = (int *) malloc(1024 * sizeof(int));
