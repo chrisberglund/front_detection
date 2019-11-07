@@ -101,7 +101,6 @@ def map_bins(dataset, latmin, latmax, lonmin, lonmax, glob):
 def map_file(args):
     cwd = os.getcwd()
     dataset = Dataset(args["file"])
-    df = map_bins(dataset, args["latmin"], args["latmax"], args["lonmin"], args["lonmax"], args["glob"])
     if args["glob"]:
         year_month = dataset.period_start_day[-2:]
         date = dataset.period_start_day
@@ -112,15 +111,17 @@ def map_file(args):
         outfile = date + "viirs_chlor.csv"
     else:
         outfile = date + '_chlor.csv'
-    dataset.close()
-    if not os.path.exists(cwd + "/out/" + year_month):
-        os.makedirs(cwd + "/out/" + year_month)
-    try:
-        df.to_csv(cwd + "/out/" + year_month + "/" + outfile, index=False)
-    except IOError as err:
-        print("Error while attempting to save shapefile:", err)
+    if outfile not in args["outfiles"]:
+        df = map_bins(dataset, args["latmin"], args["latmax"], args["lonmin"], args["lonmax"], args["glob"])
+        dataset.close()
+        if not os.path.exists(cwd + "/out/" + year_month):
+            os.makedirs(cwd + "/out/" + year_month)
+        try:
+            df.to_csv(cwd + "/out/" + year_month + "/" + outfile, index=False)
+        except IOError as err:
+            print("Error while attempting to save shapefile:", err)
 
-    print("Finished writing file %s", outfile)
+        print("Finished writing file %s", outfile)
 
 
 def map_files(directory, latmin, latmax, lonmin, lonmax):
@@ -136,19 +137,25 @@ def map_files(directory, latmin, latmax, lonmin, lonmax):
     cwd = os.getcwd()
     glob = False
     files = []
+    outfiles = []
     if not os.path.exists(cwd + "/out"):
         os.makedirs(cwd + "/out")
+    for root, dirs, file_names in os.walk(cwd + "/out"):
+        for file in file_names:
+            if file.endswith(".csv"):
+                outfiles.append(file)
+    outfiles.sort()
     for file in os.listdir(directory):
         if file.endswith(".nc"):
             files.append({"file": directory + "/" + file, "latmin": latmin,
-                          "latmax": latmax, "lonmin": lonmin, "lonmax": lonmax, "glob": glob})
+                          "latmax": latmax, "lonmin": lonmin, "lonmax": lonmax, "glob": glob, "outfiles": outfiles})
     pool = Pool(1)
     pool.map(map_file, files)
 
 
 def main():
     cwd = os.getcwd()
-    map_files(cwd + "/input", 15, 45, -140, -100)
+    map_files(cwd + "/input", 20, 80, -180, -120)
 
 
 if __name__ == "__main__":
