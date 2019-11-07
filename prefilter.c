@@ -67,7 +67,6 @@ void createFullBinArray(int totalBins, int nDataBins, int nrows, const int *data
             basebins[i] = basebins[i - 1] + nBinsInRow[i - 1];
         }
     }
-    printf("mid");
     double *meanData = (double *) malloc(sizeof(double) * nDataBins);
     struct coordinates *coords;
     coords = (struct coordinates *) malloc(sizeof(struct coordinates));
@@ -106,5 +105,4 @@ void createFullBinArray(int totalBins, int nDataBins, int nrows, const int *data
         }
     }
     free(meanData);
-    printf("end");
 }
