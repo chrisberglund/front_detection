@@ -39,23 +39,23 @@ void cayula(int totalBins, int nDataBins, int nrows, int fillValue,
         }
     }
     free(data);
-    for (int i = 15; i < nrows - 16; i += 16) {
-        for (int j = 15; j < nBinsInRow[i] - 16; j += 16) {
+    for (int i = 15; i < nrows - 16; i += 8) {
+        for (int j = 15; j < nBinsInRow[i] - 16; j += 8) {
             if (nBinsInRow[i - 15] < 32 || nBinsInRow[i + 16] < 32)
                 continue;
             int *window = (int *) malloc(1024 * sizeof(int));
             int *binWindow = (int *) malloc(1024 * sizeof(int));
-            getWindow(basebins[i] + j, i, 32, filteredData, nBinsInRow, basebins, window, fillValue, false);
-            getWindow(basebins[i] + j, i, 32, bins, nBinsInRow, basebins, binWindow, fillValue, false);
-            int threshold = histogramAnalysis(window, 32, 256);
+            getWindow(basebins[i] + j, i, 16, filteredData, nBinsInRow, basebins, window, fillValue, false);
+            getWindow(basebins[i] + j, i, 16, bins, nBinsInRow, basebins, binWindow, fillValue, false);
+            int threshold = histogramAnalysis(window, 16, 256);
             if (threshold > 0) {
-                if (isCohesive(window, 32, threshold)) {
+                if (isCohesive(window, 16, threshold)) {
                     int *edgeWindow = malloc(1024 * sizeof(int));
-                    locateEdgePixels(window, edgeWindow, 32, threshold);
+                    locateEdgePixels(window, edgeWindow, 16, threshold);
                     for (int k = 0; k < 32; k++) {
-                        for (int m = 0; m < 32; m++) {
-                            if (edgeWindow[k * 32 + m] == threshold)
-                                outData[binWindow[k * 32 + m] - 1] = edgeWindow[k * 32 + m];
+                        for (int m = 0; m < 16; m++) {
+                            if (edgeWindow[k * 16 + m] == threshold)
+                                outData[binWindow[k * 16 + m] - 1] = edgeWindow[k * 16 + m];
                         }
                     }
                     free(edgeWindow);

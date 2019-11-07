@@ -142,7 +142,7 @@ def map_files(directory, latmin, latmax, lonmin, lonmax):
         if file.endswith(".nc"):
             files.append({"file": directory + "/" + file, "latmin": latmin,
                           "latmax": latmax, "lonmin": lonmin, "lonmax": lonmax, "glob": glob})
-    pool = Pool(cpu_count() - 1)
+    pool = Pool(1)
     pool.map(map_file, files)
 
 
