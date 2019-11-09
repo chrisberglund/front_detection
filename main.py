@@ -26,7 +26,6 @@ def boa(total_bins, nrows, fill_value, rows, bins, data, weights, date, chlor_a=
                          ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double),
                          ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double),
                          ctypes.POINTER(ctypes.c_int), ctypes.c_bool)
-
     bins_array_type = ctypes.c_int * len(bins)
     lats = (ctypes.c_double * total_bins)()
     lons = (ctypes.c_double * total_bins)()
@@ -111,6 +110,7 @@ def map_file(args):
         outfile = date + "viirs_chlor.csv"
     else:
         outfile = date + '_chlor.csv'
+
     if outfile not in args["outfiles"]:
         df = map_bins(dataset, args["latmin"], args["latmax"], args["lonmin"], args["lonmax"], args["glob"])
         dataset.close()
@@ -149,6 +149,7 @@ def map_files(directory, latmin, latmax, lonmin, lonmax):
         if file.endswith(".nc"):
             files.append({"file": directory + "/" + file, "latmin": latmin,
                           "latmax": latmax, "lonmin": lonmin, "lonmax": lonmax, "glob": glob, "outfiles": outfiles})
+
     pool = Pool(1)
     pool.map(map_file, files)
 

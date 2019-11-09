@@ -20,18 +20,18 @@ void cayula(int totalBins, int nDataBins, int nrows, int fillValue,
     int *basebins = (int *) malloc(nrows * sizeof(int));
     int *data = (int *) malloc(totalBins * sizeof(int));
 
-    printf("Start \n");
+    //printf("Start \n");
     createFullBinArray(totalBins, nDataBins, nrows, dataBins, fillValue,
                        bins, inData, weights, lats, lons, nBinsInRow, basebins, data, chlora);
 
-    printf("Initializing done \n");
+    //printf("Initializing done \n");
     int *filteredData = (int *) malloc(totalBins * sizeof(int));
     medianFilter(bins, data, filteredData, totalBins, nrows, nBinsInRow, basebins, fillValue);
 
 
-    printf("Median filter done \n");
+    //printf("Median filter done \n");
 
-    int *edgePixels = (int *) malloc(totalBins * sizeof(int));
+    //int *edgePixels = (int *) malloc(totalBins * sizeof(int));
 
     for (int i = 0; i < totalBins; i++) {
         if (data[i] == fillValue) {
@@ -58,7 +58,7 @@ void cayula(int totalBins, int nDataBins, int nrows, int fillValue,
                     for (int k = 0; k < WINDOW_WIDTH; k++) {
                         for (int m = 0; m < WINDOW_WIDTH; m++) {
                             if (edgeWindow[k * WINDOW_WIDTH + m] == threshold) {
-                                edgePixels[binWindow[k * WINDOW_WIDTH + m] - 1] = edgeWindow[k * WINDOW_WIDTH + m];
+                                outData[binWindow[k * WINDOW_WIDTH + m] - 1] = edgeWindow[k * WINDOW_WIDTH + m];
                             }
                         }
                     }
@@ -69,11 +69,11 @@ void cayula(int totalBins, int nDataBins, int nrows, int fillValue,
             free(binWindow);
         }
     }
-    printf("Edgeing done \n");
-    contour(bins, edgePixels, filteredData, outData, totalBins, nrows, nBinsInRow, basebins, fillValue);
+    //printf("Edgeing done \n");
+    //contour(bins, edgePixels, filteredData, outData, totalBins, nrows, nBinsInRow, basebins, fillValue);
     free(filteredData);
-    free(edgePixels);
-    printf("Contouring done \n");
+    //free(edgePixels);
+    //printf("Contouring done \n");
     free(bins);
 }
 

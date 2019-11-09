@@ -152,8 +152,8 @@ int histogramAnalysis(int *window, int width, int nvalues) {
     double *histogram = getHistogram(window, width * width, nvalues);
     double between, mulow, muhigh, mulowMax, muhighMax, num, dem;
     double nlow = 0, nhigh = 0, nlowMax = 0, nhighMax = 0;
-    double maxBetween;
-    int threshold;
+    double maxBetween = 0;
+    int threshold = -1;
     for (int i = 1; i < nvalues - 1; i++) {  //Assuming 0 or nvalues can't be the best threshold
         nlow = 0;
         nhigh = 0;
@@ -201,8 +201,6 @@ int histogramAnalysis(int *window, int width, int nvalues) {
 
     double within = withinGroupVariance(histogram, mulowMax, muhighMax, nlowMax, nhighMax, threshold, nvalues);
     double theta = maxBetween / (maxBetween + within);
-    //printf("between: %f, within: %f \n, nlowmax: %f, nhighmax: %f mulowmax: %f, muhighmax: %f, \n", maxBetween, within, nlowMax,
-    //        nhighMax, mulowMax, muhighMax);
     free(histogram);
     if (theta >= CRIT_VALUE && !isTooLarge(window, width, threshold)) {
         return threshold;
