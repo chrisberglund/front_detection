@@ -14,7 +14,7 @@ void locateEdgePixels(const int *window, int *outWindow, int width, int threshol
         for (int j = 1; j < width - 1; j++) {
             int center = bodies[i * width + j];
             if (center != bodies[(i - 1) * width + j] || center != bodies[(i + 1) * width + j]
-            || center != bodies[i * width + (j - 1)] || center != bodies[i * width + (j + 1)]) {
+                || center != bodies[i * width + (j - 1)] || center != bodies[i * width + (j + 1)]) {
                 outWindow[i * width + j] = threshold;
             }
         }

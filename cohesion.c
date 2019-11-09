@@ -12,7 +12,7 @@
 #define CRIT_C 0.92
 
 bool isCohesive(const int *window, int width, int threshold) {
-    int *copy = malloc((width * width) * sizeof(int));
+    int *copy = malloc(width * width * sizeof(int));
     for (int i = 0; i < width * width; i++) {
         copy[i] = window[i] >= threshold;
     }
@@ -28,13 +28,21 @@ bool isCohesive(const int *window, int width, int threshold) {
                 if (copy[i * width + j] == copy[(i + 1) * width + j]) r1++;
                 if (copy[i * width + j] == copy[i * width + (j - 1)]) r1++;
                 if (copy[i * width + j] == copy[i * width + (j + 1)]) r1++;
-                t1 += 4;
+                if (copy[i * width + j] == copy[(i - 1) * width + (j - 1)]) r1++;
+                if (copy[i * width + j] == copy[(i + 1) * width + (j - 1)]) r1++;
+                if (copy[i * width + j] == copy[(i - 1) * width + (j + 1)]) r1++;
+                if (copy[i * width + j] == copy[(i + 1) * width + (j + 1)]) r1++;
+                t1 += 8;
             } else if (copy[i * width + j] == 1) {
                 if (copy[i * width + j] == copy[(i - 1) * width + j]) r2++;
                 if (copy[i * width + j] == copy[(i + 1) * width + j]) r2++;
                 if (copy[i * width + j] == copy[i * width + (j - 1)]) r2++;
                 if (copy[i * width + j] == copy[i * width + (j + 1)]) r2++;
-                t2 += 4;
+                if (copy[i * width + j] == copy[(i - 1) * width + (j - 1)]) r2++;
+                if (copy[i * width + j] == copy[(i + 1) * width + (j - 1)]) r2++;
+                if (copy[i * width + j] == copy[(i - 1) * width + (j + 1)]) r2++;
+                if (copy[i * width + j] == copy[(i + 1) * width + (j + 1)]) r2++;
+                t2 += 8;
             }
         }
     }

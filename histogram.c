@@ -27,6 +27,7 @@ double *getHistogram(const int *data, int npixels, int nbins) {
     int nvalid = 0;
     for (int i = 0; i < npixels; i++) {
         if (data[i] != -999) {
+            int test = data[i];
             occurrence[data[i]]++;
             nvalid++;
         }
@@ -133,7 +134,7 @@ bool isTooLarge(const int *window, int width, int threshold) {
     }
     sort(copy, 0, (width * width) - 1);
     int i = 0;
-    while (window[i] < threshold) {
+    while (copy[i] < threshold) {
         i++;
     }
     free(copy);

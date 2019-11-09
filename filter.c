@@ -106,7 +106,7 @@ int applyMedianFilter(int *window, int width) {
  * @param basebins pointer to an array of nrows length containing the bin number of the first bin in each row
  */
 void medianFilter(int *bins, int *data, int *filteredData, int nbins, int nrows,
-                            int *nBinsInRow, int *basebins, int fillValue) {
+                  int *nBinsInRow, int *basebins, int fillValue) {
     int *threeWindow = (int *) malloc(sizeof(int) * 9);
     int row = 0;
     for (int i = 0; i < nbins; i++) {

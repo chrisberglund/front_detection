@@ -124,26 +124,61 @@ int getNeighborBin(int bin, int row, int distance, const int *nBinsInRow, const 
  * @param basebins pointer to an array containing the bin number of the first bin of each row
  * @param window pointer to nxn 2-D array to write data values to
  */
+
 bool getWindow(int bin, int row, int width, const int *data, const int *nBinsInRow,
                const int *basebins, int *window, int fillValue, bool fill) {
-    int maxDistance = (int) round((width - 1.0) / 2);
+    int maxDistance;
     int nsNeighbor;
-    for (int i = 0; i < width; i++) {
-        nsNeighbor = getNeighborBin(bin, row, i - maxDistance, nBinsInRow, basebins);
-        int neighborRow = row+i-maxDistance;
-        for (int j = 0; j < width; j++) {
-            if (nsNeighbor + (j - maxDistance) < basebins[neighborRow]) {
-                window[i * width + j] = data[basebins[neighborRow] + nBinsInRow[neighborRow] + (j - maxDistance)];
-            } else if (nsNeighbor + (j - maxDistance) - 1 >= basebins[neighborRow + 1]) {
-                window[i * width + j] = data[basebins[neighborRow] + (j - maxDistance) - 1];
+    int neighborRow;
+    if (width % 2 == 0) {
+        maxDistance = width / 2;
+        for (int i = 0; i < width; i++) {
+            if (i < width) {
+                nsNeighbor = getNeighborBin(bin, row, i - maxDistance + 1, nBinsInRow, basebins);
+                neighborRow = row + i - maxDistance + 1;
             } else {
-                window[i * width + j] = data[nsNeighbor + (j - maxDistance) - 1];
+                nsNeighbor = getNeighborBin(bin, row, i - maxDistance, nBinsInRow, basebins);
+                neighborRow = row+i-maxDistance;
+            }
+            for (int j = 0; j < width; j++) {
+                if (j < width) {
+                    if (nsNeighbor + (j - maxDistance + 1) < basebins[neighborRow]) {
+                        window[i * width + j] = data[basebins[neighborRow] + nBinsInRow[neighborRow] + (j - maxDistance + 1)];
+                    } else if (nsNeighbor + (j - maxDistance + 1) - 1 >= basebins[neighborRow] + nBinsInRow[neighborRow]) {
+                        window[i * width + j] = data[basebins[neighborRow] + (j - maxDistance + 1) - 1];
+                    } else {
+                        window[i * width + j] = data[nsNeighbor + (j - maxDistance + 1) - 1];
+                    }
+                } else {
+                    if (nsNeighbor + (j - maxDistance) < basebins[neighborRow]) {
+                        window[i * width + j] = data[basebins[neighborRow] + nBinsInRow[neighborRow] + (j - maxDistance)];
+                    } else if (nsNeighbor + (j - maxDistance) - 1 >= basebins[neighborRow + 1]) {
+                        window[i * width + j] = data[basebins[neighborRow] + (j - maxDistance) - 1];
+                    } else {
+                        window[i * width + j] = data[nsNeighbor + (j - maxDistance) - 1];
+                    }
+                }
+            }
+        }
+    } else {
+        maxDistance = (int) round((width - 1.0) / 2);
+        for (int i = 0; i < width; i++) {
+            nsNeighbor = getNeighborBin(bin, row, i - maxDistance, nBinsInRow, basebins);
+            neighborRow = row + i - maxDistance;
+            for (int j = 0; j < width; j++) {
+                if (nsNeighbor + (j - maxDistance) < basebins[neighborRow]) {
+                    window[i * width + j] = data[basebins[neighborRow] + nBinsInRow[neighborRow] + (j - maxDistance)];
+                } else if (nsNeighbor + (j - maxDistance) - 1 >= basebins[neighborRow + 1]) {
+                    window[i * width + j] = data[basebins[neighborRow] + (j - maxDistance) - 1];
+                } else {
+                    window[i * width + j] = data[nsNeighbor + (j - maxDistance) - 1];
+                }
             }
         }
     }
 
     for (int i = 0; i < width * width; i++) {
-        if (window[i] == -999 && fill){
+        if (window[i] == fillValue && fill){
             return false;
         }
     }
