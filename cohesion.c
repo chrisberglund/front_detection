@@ -22,7 +22,6 @@ bool isCohesive(const int *window, int width, int threshold) {
     double t2 = 0;
     for (int i = 1; i < width - 1; i++) {
         for (int j = 1; j < width - 1; j++) {
-            //printf("%d \n", window[i * width + j]);
             if (copy[i * width + j] == 0) {
                 if (copy[i * width + j] == copy[(i - 1) * width + j]) r1++;
                 if (copy[i * width + j] == copy[(i + 1) * width + j]) r1++;

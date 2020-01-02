@@ -156,7 +156,7 @@ def map_files(directory, latmin, latmax, lonmin, lonmax):
 
 def main():
     cwd = os.getcwd()
-    map_files(cwd + "/input", 20, 80, -180, -120)
+    map_files(cwd + "/input", -80, 80, -180, 0)
 
 
 if __name__ == "__main__":
