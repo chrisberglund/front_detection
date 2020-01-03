@@ -10,6 +10,13 @@ struct coordinates {
     double longitude;
 };
 
+struct node {
+    struct node *next;
+    int bin;
+    double lat;
+    double lon;
+};
+
 /**
  * Determines the latitude and longitude values for the specified bin
  * @param bin bin number for the bin of interest
