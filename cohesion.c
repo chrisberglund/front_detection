@@ -31,7 +31,6 @@ bool isCohesive(const int *window, int width, int threshold) {
                 if (copy[i * width + j] == copy[(i + 1) * width + (j - 1)]) r1++;
                 if (copy[i * width + j] == copy[(i - 1) * width + (j + 1)]) r1++;
                 if (copy[i * width + j] == copy[(i + 1) * width + (j + 1)]) r1++;
-                t1 += 8;
             } else if (copy[i * width + j] == 1) {
                 if (copy[i * width + j] == copy[(i - 1) * width + j]) r2++;
                 if (copy[i * width + j] == copy[(i + 1) * width + j]) r2++;

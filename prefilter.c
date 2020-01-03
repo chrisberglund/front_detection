@@ -32,6 +32,15 @@ void bin2latlon(int bin, const int *nBinsInRow, const double *latrows, int *base
     coords->longitude = clon;
 }
 
+void cropBins(int *bins, int nbins, const double *lats, const double *lons, double minLat, double maxLat,
+        double minLon, double maxLon) {
+    for (int i = 0; i < nbins; i++) {
+        if (lats[i] >= minLat && lats[i] <= maxLat && lons[i] >= minLon && lons[i] <= maxLon) {
+            bins[i] = -1;
+        }
+    }
+}
+
 /**
  * Creates an array containing all bins in the binning scheme including empty bins and assigns a latitude and longitude
  * value to each bin. Empty bins will be assigned
@@ -56,7 +65,8 @@ void bin2latlon(int bin, const int *nBinsInRow, const double *latrows, int *base
 void createFullBinArray(int totalBins, int nDataBins, int nrows, const int *dataBins, int fillValue,
                         int *outBins, const double *inData, const double *weights,
                         double *lats, double *lons, int *nBinsInRow, int *basebins,
-                        int *outData, bool chlora) {
+                        int *outData, bool chlora, double minLat, double maxLat,
+                        double minLon, double maxLon) {
     double *latrows = (double *) malloc(sizeof(double) * nrows);
     for (int i = 0; i < nrows; ++i) {
         latrows[i] = ((i + 0.5) * 180.0 / nrows) - 90;
@@ -105,4 +115,5 @@ void createFullBinArray(int totalBins, int nDataBins, int nrows, const int *data
         }
     }
     free(meanData);
+    cropBins(outBins, totalBins, lats, lons, minLat, maxLat, minLon, maxLon)
 }

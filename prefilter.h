@@ -7,5 +7,6 @@
 void createFullBinArray(int totalBins, int nDataBins, int nrows, const int *dataBins, int fillValue,
                         int *outBins, const double *inData, const double *weights,
                         double *lats, double *lons, int *nBinsInRow, int *basebins,
-                        int *outData, bool chlora);
+                        int *outData, bool chlora,double minLat, double maxLat,
+                        double minLon, double maxLon);
 #endif //SIED_PREFILTER_H

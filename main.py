@@ -6,7 +6,8 @@ import pandas as pd
 from multiprocessing import Pool, cpu_count
 
 
-def boa(total_bins, nrows, fill_value, rows, bins, data, weights, date, chlor_a=False, glob=False):
+def boa(total_bins, nrows, fill_value, rows, bins, data, weights, date, min_lat, max_lat, min_lon, max_lon,
+        chlor_a=False, glob=False):
     """
     Performs the Belkin-O'Reilly front detection algorithm on the provided bins
     :param total_bins: total number of bins in the binning scheme
@@ -21,21 +22,42 @@ def boa(total_bins, nrows, fill_value, rows, bins, data, weights, date, chlor_a=
     :return: pandas dataframe containing bin values of each bin resulting from edge detection algorithm
     """
     _cayula = ctypes.CDLL('./sied.so')
-    _cayula.cayula.argtypes = (ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.POINTER(ctypes.c_int),
-                         ctypes.POINTER(ctypes.c_int),
-                         ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double),
-                         ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double),
-                         ctypes.POINTER(ctypes.c_int), ctypes.c_bool)
+    _cayula.prepareBins.argtypes = (
+        ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.POINTER(ctypes.c_int), ctypes.c_int,
+        ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double),
+        ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_int),
+        ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int), ctypes.c_bool, ctypes.c_double, ctypes.c_double,
+        ctypes.c_double, ctypes.c_double)
+
+    _cayula.cayula.argtypes = (ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int),
+                               ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.POINTER(ctypes.c_int),
+                               ctypes.POINTER(ctypes.c_int))
+
     bins_array_type = ctypes.c_int * len(bins)
-    lats = (ctypes.c_double * total_bins)()
-    lons = (ctypes.c_double * total_bins)()
-    rows = (ctypes.c_int * len(rows))(*rows)
-    data_array = (ctypes.c_double * len(data))(*data)
-    data_out = (ctypes.c_int * total_bins)()
-    weights_array = (ctypes.c_double * len(bins))(*weights)
-    _cayula.cayula(total_bins, len(bins), nrows, fill_value, bins_array_type(*bins), rows, data_array, weights_array, lats,
-             lons,
-             data_out, chlor_a)
+    total_bins_arr = (ctypes.c_int * total_bins)()
+    data_arr = (ctypes.c_double * len(data))(*data)
+    weights_arr = (ctypes.c_double * len(bins))(*weights)
+    data_arr = (ctypes.c_int * total_bins)()
+    lats_arr = (ctypes.c_double * total_bins)()
+    lons_arr = (ctypes.c_double * total_bins)()
+    nbins_in_row = (ctypes.c_int * nrows)()
+    basebins = (ctypes.c_int * nrows)()
+
+    _cayula.prepareBins(total_bins, len(bins), nrows, bins_array_type(*bins), fill_value, total_bins_arr, data_arr,
+                        weights_arr, lats_arr, lons_arr, nbins_in_row, basebins, data_arr, chlor_a, min_lat,
+                        max_lat, min_lon, max_lon)
+
+    lats = list(lats_arr)
+    lons = list(lons_arr)
+    data = list(all_data_arr)
+    bins = list(total_bins_arr)
+    df = pd.DataFrame(
+        data={"Latitude": lats, "Longitude": lons, "Data": data, "Bin": bins})
+    df = df[df["Bin"] != -1]
+    data_arr = (ctypes.c_int * total_bins)(df["Data"].tolist())
+    bins_arr = (ctypes.c_int * total_bins)(df["Bin"].tolist())
+
+    _cayula.cayula(bins_arr, nbins_in_row, basebins, len(bins), nrows, fill_value, indata, outdata)
     lats = list(lats)
     lons = list(lons)
     final_data = list(data_out)
