@@ -82,9 +82,7 @@ bool isSharpTurn(struct subnode *tail, int nextTheta) {
     int counter = 0;
     int dtheta = 0;
     struct subnode *tmp = tail;
-    int prevTheta = 0;
     while (tail->prev != NULL && counter < 3) {
-        prevTheta = tmp->entryAngle;
         dtheta = tmp->entryAngle - nextTheta;
         dtheta = mod(dtheta + 180, 360) - 180;
         dtheta = dtheta < -180 ? dtheta + 360 : dtheta;
@@ -128,19 +126,20 @@ double getGradientRatio(const int *window, int fillValue) {
 
 /**
  * Adds the next pixel to the end of the provided contour
- * @param bin
- * @param row
- * @param bins
- * @param inData
- * @param filteredData
- * @param isInContour
- * @param nBinsInRow
- * @param basebins
- * @param fillValue
- * @param tail
- * @return
+ * @param row row that contains the last point in the current contour
+ * @param bins pointer to an array containing all bin numbers
+ * @param inData pointer to an array containing detected edge pixels. Edge pixels have a value equal to the threshold
+ * determined with histogram analysis, non-edge pixels have a value of 0
+ * @param filteredData pointer to an array containing original data after going through median filter
+ * @param isInContour pointer to a boolean array nbins long with a value for each bin for whether or not that bin
+ * is currently in a contour
+ * @param nBinsInRow pointer to an array of nrows length that contains the number of bins in each row
+ * @param basebins pointer to an array of nrows length that contains the number for the first bin of each row
+ * @param fillValue the fill value used for missing or invalid values
+ * @param tail pointer to the node in the contours linked list
+ * @return returns the current length of the contour
  */
-int followContour(int bin, int row, int *bins, const int *inData, const int *filteredData, bool *isInContour,
+int followContour(int row, int *bins, const int *inData, const int *filteredData, bool *isInContour,
                   const int *nBinsInRow, const int *basebins, int fillValue, struct subnode *tail) {
     int count = 1;
     int nextContourPixel = -1;
@@ -148,7 +147,7 @@ int followContour(int bin, int row, int *bins, const int *inData, const int *fil
     int nextAngle = 0;
     int dtheta = 0;
     int *binWindow = malloc(9 * sizeof(int));
-    getWindow(bin, row, 3, bins, nBinsInRow, basebins, binWindow, fillValue, false);
+    getWindow(tail->bin, row, 3, bins, nBinsInRow, basebins, binWindow, fillValue, false);
     for (int i = 0; i < 9; i++) {
         if (i == 4)
             continue;
@@ -175,7 +174,7 @@ int followContour(int bin, int row, int *bins, const int *inData, const int *fil
 
     if (nextContourPixel == -1) {
         int *dataWindow = malloc(25 * sizeof(int));
-        getWindow(bin, row, 5, filteredData, nBinsInRow, basebins, dataWindow, fillValue, false);
+        getWindow(tail->bin, row, 5, filteredData, nBinsInRow, basebins, dataWindow, fillValue, false);
         ratio = getGradientRatio(dataWindow, fillValue);
         free(dataWindow);
         if (ratio > 0.7) {
@@ -184,7 +183,7 @@ int followContour(int bin, int row, int *bins, const int *inData, const int *fil
             struct gradientVector gradient1;
             int maxIndex = -1;
             int *smallWindow = malloc(9 * sizeof(int));
-            getWindow(bin, row, 3, filteredData, nBinsInRow, basebins, smallWindow, fillValue, false);
+            getWindow(tail->bin, row, 3, filteredData, nBinsInRow, basebins, smallWindow, fillValue, false);
             struct gradientVector gradient0 = gradient(smallWindow, fillValue);
             for (int i = 0; i < 3; i++) {
                 for (int j = 0; j < 3; j++) {
@@ -195,7 +194,8 @@ int followContour(int bin, int row, int *bins, const int *inData, const int *fil
                               nBinsInRow, basebins, smallWindow, fillValue, false);
                     gradient1 = gradient(smallWindow, fillValue);
                     product = (gradient0.x * gradient1.x) + (gradient0.y * gradient1.y);
-                    if (product > maxProduct) {
+                    nextAngle = ANGLES[i * 3 + j];
+                    if (product > maxProduct && !isSharpTurn(tail, nextAngle)) {
                         maxProduct = product;
                         maxIndex = i * 3 + j;
                     }
@@ -229,13 +229,17 @@ int followContour(int bin, int row, int *bins, const int *inData, const int *fil
         tmp->entryAngle = nextAngle;
         tmp->bin = nextContourPixel;
         tmp->next = NULL;
-        count += followContour(nextContourPixel, nextRow, bins, inData, filteredData, isInContour, nBinsInRow, basebins,
+        count += followContour(nextRow, bins, inData, filteredData, isInContour, nBinsInRow, basebins,
                                fillValue, tmp);
     }
 
     return count;
 }
 
+/**
+ * Removes all points in a contour from the contour node
+ * @param head pointer to the node for the contour
+ */
 void clearSubList(struct node *head) {
     struct subnode *subhead = head->child;
     struct subnode *tmp = NULL;
@@ -324,7 +328,7 @@ void contour(int *bins, int *inData, int *filteredData, int *outData, int ndata,
             tail->child->next = NULL;
             tail->child->entryAngle = -999;
             tail->child->bin = i + 1;
-            tail->length = followContour(i + 1, row, bins, inData, filteredData, isInContour, nBinsInRow, basebins,
+            tail->length = followContour(row, bins, inData, filteredData, isInContour, nBinsInRow, basebins,
                                          fillValue, tail->child);
         }
         if (i == basebins[row] + nBinsInRow[row] - 1) {

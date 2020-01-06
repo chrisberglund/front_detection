@@ -13,7 +13,7 @@
 #define WINDOW_WIDTH 32
 
 void cayula(int totalBins, int nDataBins, int nrows, int fillValue,
-            int *dataBins, int *rows, double *inData, double *weights, double *lats, double *lons, int *outData,
+            int *dataBins, double *inData, double *weights, double **lats, double **lons, int **outData,
             bool chlora) {
     int *bins = (int *) malloc(totalBins * sizeof(int));
     int *nBinsInRow = (int *) malloc(nrows * sizeof(int));

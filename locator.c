@@ -1,6 +1,3 @@
-//
-// Created by Christopher Berglund on 11/1/19.
-//
 #include <stdlib.h>
 #include "locator.h"
 

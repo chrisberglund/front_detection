@@ -13,8 +13,8 @@ struct coordinates {
 struct node {
     struct node *next;
     int bin;
-    double lat;
-    double lon;
+    int firstBin;
+    int lastBin;
 };
 
 /**
@@ -40,6 +40,100 @@ void bin2latlon(int bin, const int *nBinsInRow, const double *latrows, int *base
 }
 
 /**
+ * Takes a set of latitudes and longitudes and finds the bins that are inside provided minimum and maximum latitude
+ * and longitude values.
+ * @param lats pointer to an array containing all latitude values in dataset
+ * @param lons pointer to an array containing all longitude values in dataset
+ * @param data pointer to an array containing all data
+ * @param nbins number of bins in dataset
+ * @param outBins pointer to a pointer to be assigned to an array containing all the bins inside the minimum and max values
+ * @param outLats pointer to a pointer to be assigned to an array containing all the lats inside the minimum and max values
+ * @param outLons pointer to a pointer to be assigned to an array containing all the lons inside the minimum and max values
+ * @param outData pointer to a pointer to be assigned to an array containing all the data inside the min and max values
+ * @param minLat minimum latitude value
+ * @param maxLat maximum latitude value
+ * @param minLon minimum longitude value
+ * @param maxLon maximum longitude value
+ * @return the number of bins inside the given area
+ */
+int subset(const double *lats, const double *lons, const int *data, int *basebins,
+           int nbins, int nrows, int **outBins, double **outLats, double **outLons, int **outData, int **outBasebins,
+           int **outBinsInRow,
+           int *outRows,
+           double minLat, double maxLat, double minLon,
+           double maxLon) {
+    int currentRow = 0;
+    int nsubsetBins = 0;
+    struct node *head = NULL;
+    struct node *tail = NULL;
+    for (int i = 0; i < nbins; i++) {
+        if (lats[i] <= maxLat && lats[i] >= minLat && lons[i] <= maxLon && lons[i] >= minLon) {
+            if (head == NULL) {
+                head = (struct node *) malloc(sizeof(struct node));
+                head->next = NULL;
+                head->bin = i + 1;
+                head->firstBin = 0;
+                head->lastBin = -1;
+                tail = head;
+            } else {
+                struct node *tmp = (struct node *) malloc(sizeof(struct node));
+                tmp->bin = i + 1;
+                tmp->next = NULL;
+                if (currentRow + 2 < nrows) {
+                    tmp->firstBin = tmp->bin >= basebins[currentRow + 1] ? ++currentRow : -1;
+                    //currentRow will have been incremented if it's the first bin in the row, so it shouldn't also count
+                    //as the last in the row
+                    tmp->lastBin = tmp->bin + 1 >= basebins[currentRow + 1] ? currentRow : -1;
+                }
+                tail->next = tmp;
+                tail = tmp;
+            }
+            nsubsetBins++;
+        }
+    }
+    int prevBin = 0;
+    int *subsetBins = (int *) malloc(nsubsetBins * sizeof(int));
+    double *subsetLats = (double *) malloc(nsubsetBins * sizeof(double));
+    double *subsetLons = (double *) malloc(nsubsetBins * sizeof(double));
+    int *subsetData = (int *) malloc(nsubsetBins * sizeof(int));
+    int *subsetBasebins = (int *) malloc((currentRow + 1) * sizeof(int));
+    int *subsetBinsInRow = (int *) malloc((currentRow + 1) * sizeof(int));
+    int binsInRow = 0;
+    currentRow = -1;
+    for (int i = 0; i < nsubsetBins; i++) {
+        if (head != NULL) {
+            subsetBins[i] = ++prevBin;
+            subsetLats[i] = lats[head->bin - 1];
+            subsetLons[i] = lons[head->bin - 1];
+            subsetData[i] = data[head->bin - 1];
+            if (head->firstBin != -1 && head->lastBin != -1) {
+                printf("Shouldn't count as both a first and last bin \n");
+            } else if (head->firstBin != -1) {
+                currentRow++;
+                subsetBasebins[currentRow] = subsetBins[i];
+                binsInRow++;
+            } else if (head->lastBin != -1) {
+                subsetBinsInRow[currentRow] = binsInRow;
+                binsInRow = 0;
+            } else {
+                binsInRow++;
+            }
+            struct node *tmp = head->next;
+            free(head);
+            head = tmp;
+        }
+    }
+    *outBins = subsetBins;
+    *outLats = subsetLats;
+    *outLons = subsetLons;
+    *outData = subsetData;
+    *outBasebins = subsetBasebins;
+    *outBinsInRow = subsetBinsInRow;
+    *outRows = currentRow;
+    return nsubsetBins;
+}
+
+/**
  * Creates an array containing all bins in the binning scheme including empty bins and assigns a latitude and longitude
  * value to each bin. Empty bins will be assigned
  * a fill value.
@@ -59,12 +153,15 @@ void bin2latlon(int bin, const int *nBinsInRow, const double *latrows, int *base
  * values for empty bins will be the given fill value
  * @param chlora if the provided data is chlorophyll concentration, the output data value will be the natural
  * lograithm of the mean data value for each bin
+ * @return the number of bins in the subset
  */
-void createFullBinArray(int totalBins, int nDataBins, int nrows, const int *dataBins, int fillValue,
-                        int *outBins, const double *inData, const double *weights,
-                        double *lats, double *lons, int *nBinsInRow, int *basebins,
-                        int *outData, bool chlora) {
+int createFullBinArray(int totalBins, int nDataBins, int nrows, const int *dataBins, int fillValue,
+                       int **outBins, const double *inData, const double *weights,
+                       double **outLats, double **outLons, int **outBinsInRow, int **outBasebins,
+                       int **outData, bool chlora, double minLat, double maxLat, double minLon, double maxLon) {
     double *latrows = (double *) malloc(sizeof(double) * nrows);
+    int *basebins = (int *) malloc(sizeof(int) * nrows);
+    int *nBinsInRow = (int *) malloc(sizeof(int) * nrows);
     for (int i = 0; i < nrows; ++i) {
         latrows[i] = ((i + 0.5) * 180.0 / nrows) - 90;
         nBinsInRow[i] = (int) (2 * nrows * cos(latrows[i] * M_PI / 180.0) + 0.5);
@@ -75,12 +172,16 @@ void createFullBinArray(int totalBins, int nDataBins, int nrows, const int *data
         }
     }
     double *meanData = (double *) malloc(sizeof(double) * nDataBins);
+    double *lats = (double *) malloc(sizeof(double) * totalBins);
+    double *lons = (double *) malloc(sizeof(double) * totalBins);
+    int *bins = (int *) malloc(sizeof(int) * totalBins);
+    int *data = (int *) malloc(sizeof(int) * totalBins);
     struct coordinates *coords;
     coords = (struct coordinates *) malloc(sizeof(struct coordinates));
     for (int i = 0; i < totalBins; i++) {
-        outBins[i] = i + 1;
-        outData[i] = fillValue;
-        bin2latlon(outBins[i], nBinsInRow, latrows, basebins, nrows, coords);
+        bins[i] = i + 1;
+        data[i] = fillValue;
+        bin2latlon(bins[i], nBinsInRow, latrows, basebins, nrows, coords);
         lats[i] = coords->latitude;
         lons[i] = coords->longitude;
     }
@@ -102,14 +203,17 @@ void createFullBinArray(int totalBins, int nDataBins, int nrows, const int *data
             maxValue = meanData[i];
     }
 
-
     for (int i = 0; i < nDataBins; i++) {
-        if (meanData[i] == fillValue)
-            outData[dataBins[i] - 1] = fillValue;
-        else {
+        if (meanData[i] != fillValue) {
             double ratio = (meanData[i] + fabs(minValue)) / fabs(maxValue - minValue);
-            outData[dataBins[i] - 1] = (int) floor(ratio * 255);
+            data[dataBins[i] - 1] = (int) floor(ratio * 255);
         }
     }
     free(meanData);
+    int nbins = subset(lats, lons, data, totalBins, outBins, outLats, outLons, outData, minLat, maxLat, minLon, maxLon);
+    free(lats);
+    free(lons);
+    free(bins);
+    free(data);
+    return nbins;
 }
