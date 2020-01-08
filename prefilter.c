@@ -56,7 +56,7 @@ void bin2latlon(int bin, const int *nBinsInRow, const double *latrows, int *base
  * @param maxLon maximum longitude value
  * @return the number of bins inside the given area
  */
-int subset(const double *lats, const double *lons, const int *data, int *basebins,
+int subset(const double *lats, const double *lons, const int *data, const int *basebins, const int *nBinsInRow,
            int nbins, int nrows, int **outBins, double **outLats, double **outLons, int **outData, int **outBasebins,
            int **outBinsInRow,
            int *outRows,
@@ -79,18 +79,21 @@ int subset(const double *lats, const double *lons, const int *data, int *basebin
                 struct node *tmp = (struct node *) malloc(sizeof(struct node));
                 tmp->bin = i + 1;
                 tmp->next = NULL;
-                if (currentRow + 2 < nrows) {
-                    tmp->firstBin = tmp->bin >= basebins[currentRow + 1] ? ++currentRow : -1;
-                    //currentRow will have been incremented if it's the first bin in the row, so it shouldn't also count
-                    //as the last in the row
-                    tmp->lastBin = tmp->bin + 1 >= basebins[currentRow + 1] ? currentRow : -1;
-                }
+                tmp->firstBin = tail->bin < basebins[currentRow] + nBinsInRow[currentRow] && tmp->bin >= basebins[currentRow] + nBinsInRow[currentRow] ? ++currentRow : -1;
+                tmp->lastBin = tmp->bin >= basebins[currentRow] + nBinsInRow[currentRow] - 1 ? currentRow : -1;
+
                 tail->next = tmp;
                 tail = tmp;
             }
             nsubsetBins++;
+        } else {
+            if (currentRow + 1 < nrows) {
+                if (i >= basebins[currentRow + 1])
+                    currentRow++;
+            }
         }
     }
+
     int prevBin = 0;
     int *subsetBins = (int *) malloc(nsubsetBins * sizeof(int));
     double *subsetLats = (double *) malloc(nsubsetBins * sizeof(double));
@@ -106,30 +109,28 @@ int subset(const double *lats, const double *lons, const int *data, int *basebin
             subsetLats[i] = lats[head->bin - 1];
             subsetLons[i] = lons[head->bin - 1];
             subsetData[i] = data[head->bin - 1];
-            if (head->firstBin != -1 && head->lastBin != -1) {
-                printf("Shouldn't count as both a first and last bin \n");
-            } else if (head->firstBin != -1) {
+            binsInRow++;
+            if (head->firstBin != -1) {
                 currentRow++;
                 subsetBasebins[currentRow] = subsetBins[i];
-                binsInRow++;
             } else if (head->lastBin != -1) {
                 subsetBinsInRow[currentRow] = binsInRow;
                 binsInRow = 0;
-            } else {
-                binsInRow++;
             }
             struct node *tmp = head->next;
             free(head);
             head = tmp;
         }
     }
-    *outBins = subsetBins;
+
+    *outRows = currentRow + 1;
+    *outBins =  subsetBins;
     *outLats = subsetLats;
     *outLons = subsetLons;
-    *outData = subsetData;
-    *outBasebins = subsetBasebins;
+    *outData =  subsetData;
+    *outBasebins =  subsetBasebins;
     *outBinsInRow = subsetBinsInRow;
-    *outRows = currentRow;
+    printf("%d \n", currentRow);
     return nsubsetBins;
 }
 
@@ -158,7 +159,7 @@ int subset(const double *lats, const double *lons, const int *data, int *basebin
 int createFullBinArray(int totalBins, int nDataBins, int nrows, const int *dataBins, int fillValue,
                        int **outBins, const double *inData, const double *weights,
                        double **outLats, double **outLons, int **outBinsInRow, int **outBasebins,
-                       int **outData, bool chlora, double minLat, double maxLat, double minLon, double maxLon) {
+                       int **outData, int *outRows, bool chlora, double minLat, double maxLat, double minLon, double maxLon) {
     double *latrows = (double *) malloc(sizeof(double) * nrows);
     int *basebins = (int *) malloc(sizeof(int) * nrows);
     int *nBinsInRow = (int *) malloc(sizeof(int) * nrows);
@@ -210,10 +211,15 @@ int createFullBinArray(int totalBins, int nDataBins, int nrows, const int *dataB
         }
     }
     free(meanData);
-    int nbins = subset(lats, lons, data, totalBins, outBins, outLats, outLons, outData, minLat, maxLat, minLon, maxLon);
+    int nbins = subset(lats, lons, data, basebins, nBinsInRow, totalBins, nrows, outBins, outLats, outLons, outData, outBasebins,
+                       outBinsInRow, outRows, minLat, maxLat, minLon, maxLon);
+
+    printf("Finish subset");
     free(lats);
     free(lons);
     free(bins);
     free(data);
+    free(basebins);
+    free(nBinsInRow);
     return nbins;
 }

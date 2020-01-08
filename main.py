@@ -22,19 +22,20 @@ def boa(total_bins, nrows, fill_value, rows, bins, data, weights, date, chlor_a=
     """
     _cayula = ctypes.CDLL('./sied.so')
     _cayula.cayula.argtypes = (ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.POINTER(ctypes.c_int),
-                               ctypes.POINTER(ctypes.c_int),
                                ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double),
-                               ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double),
-                               ctypes.POINTER(ctypes.c_int), ctypes.c_bool)
+                               ctypes.POINTER(ctypes.POINTER(ctypes.c_double)), ctypes.POINTER(ctypes.POINTER(ctypes.c_double)),
+                               ctypes.POINTER(ctypes.POINTER(ctypes.c_int)), ctypes.c_bool, ctypes.c_double, ctypes.c_double, ctypes.c_double, ctypes.c_double)
     bins_array_type = ctypes.c_int * len(bins)
-    lats = (ctypes.c_double * total_bins)()
-    lons = (ctypes.c_double * total_bins)()
+    lats = ctypes.POINTER(ctypes.c_double)()
+    lons = ctypes.POINTER(ctypes.c_double)()
     data_array = (ctypes.c_double * len(data))(*data)
-    data_out = (ctypes.c_int * total_bins)()
+    data_out = ctypes.POINTER(ctypes.c_int)()
     weights_array = (ctypes.c_double * len(bins))(*weights)
-    _cayula.cayula(total_bins, len(bins), nrows, fill_value, bins_array_type(*bins), data_array, weights_array, lats,
-                   lons,
-                   data_out, chlor_a)
+    print("test")
+    _cayula.cayula(total_bins, len(bins), nrows, fill_value, bins_array_type(*bins), data_array, weights_array, ctypes.byref(lats),
+                   ctypes.byref(lons),
+                   ctypes.byref(data_out), chlor_a, -60, 60, -180, 0)
+
     lats = list(lats)
     lons = list(lons)
     final_data = list(data_out)

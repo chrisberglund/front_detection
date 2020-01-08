@@ -12,32 +12,35 @@
 
 #define WINDOW_WIDTH 32
 
-void cayula(int totalBins, int nDataBins, int nrows, int fillValue,
+void cayula(int totalBins, int nDataBins, int nInputRows, int fillValue,
             int *dataBins, double *inData, double *weights, double **lats, double **lons, int **outData,
-            bool chlora) {
-    int *bins = (int *) malloc(totalBins * sizeof(int));
-    int *nBinsInRow = (int *) malloc(nrows * sizeof(int));
-    int *basebins = (int *) malloc(nrows * sizeof(int));
-    int *data = (int *) malloc(totalBins * sizeof(int));
-
-    //printf("Start \n");
-    createFullBinArray(totalBins, nDataBins, nrows, dataBins, fillValue,
-                       bins, inData, weights, lats, lons, nBinsInRow, basebins, data, chlora);
+            bool chlora, double minLat, double maxLat, double minLon, double maxLon) {
+    int *basebins;
+    int *bins;
+    int *data;
+    int *nBinsInRow;
+    int nrows;
+    printf("test");
+    int nbins = createFullBinArray(totalBins, nDataBins, nInputRows, dataBins, fillValue,
+                           &bins, inData, weights,
+                           lats, lons, &nBinsInRow, &basebins,
+                           &data, &nrows, chlora, minLat,maxLat, minLon,maxLon);
 
     //printf("Initializing done \n");
-    int *filteredData = (int *) malloc(totalBins * sizeof(int));
+    int *filteredData = (int *) malloc(nbins * sizeof(int));
     medianFilter(bins, data, filteredData, totalBins, nrows, nBinsInRow, basebins, fillValue);
 
 
     //printf("Median filter done \n");
 
-    int *edgePixels = (int *) malloc(totalBins * sizeof(int));
+    int *edgePixels = (int *) malloc(nbins * sizeof(int));
+    int *finalData = (int *) malloc(nbins * sizeof(int));
 
-    for (int i = 0; i < totalBins; i++) {
+    for (int i = 0; i < nbins; i++) {
         if (data[i] == fillValue) {
-            outData[i] = fillValue;
+            finalData[i] = fillValue;
         } else {
-            outData[i] = 0;
+            finalData[i] = 0;
         }
     }
     free(data);
@@ -70,9 +73,12 @@ void cayula(int totalBins, int nDataBins, int nrows, int fillValue,
         }
     }
     //printf("Edgeing done \n");
-    contour(bins, edgePixels, filteredData, outData, totalBins, nrows, nBinsInRow, basebins, fillValue);
+    contour(bins, edgePixels, filteredData, finalData, nbins, nrows, nBinsInRow, basebins, fillValue);
+    *outData = finalData;
     free(filteredData);
     free(edgePixels);
+    free(basebins);
+    free(nBinsInRow);
     //printf("Contouring done \n");
     free(bins);
 }
