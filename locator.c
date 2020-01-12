@@ -19,4 +19,5 @@ void locateEdgePixels(const int *window, int *outWindow, int width, int threshol
             }
         }
     }
+    free(bodies);
 }

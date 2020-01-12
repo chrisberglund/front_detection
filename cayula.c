@@ -71,6 +71,8 @@ void cayula(int totalBins, int nDataBins, int nrows, int fillValue,
     }
     //printf("Edgeing done \n");
     contour(bins, edgePixels, filteredData, outData, totalBins, nrows, nBinsInRow, basebins, fillValue);
+    free(nBinsInRow);
+    free(basebins);
     free(filteredData);
     free(edgePixels);
     //printf("Contouring done \n");
