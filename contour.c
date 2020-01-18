@@ -59,7 +59,7 @@ void replaceFillValue(int *window, int fillValue) {
 }
 
 /**
- * Applies a sobel operator to a bin
+ * Calculates the gradient for the center of a 3x3 window
  * @param window pointer to an array of length 9 containing data values representing a 3x3 window
  * @return structure containing the direction and magnitude of the gradient
  */
