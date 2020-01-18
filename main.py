@@ -6,7 +6,7 @@ import pandas as pd
 from multiprocessing import Pool, cpu_count
 
 
-def boa(total_bins, nrows, fill_value, rows, bins, data, weights, date, chlor_a=False, glob=False):
+def sied(total_bins, nrows, fill_value, rows, bins, data, weights, date, chlor_a=False, glob=False):
     """
     Performs the Belkin-O'Reilly front detection algorithm on the provided bins
     :param total_bins: total number of bins in the binning scheme
@@ -89,7 +89,7 @@ def map_bins(dataset, latmin, latmax, lonmin, lonmax, glob):
     else:
         total_bins, nrows, bins, data, weights, date = get_params_modis(dataset, "chlor_a")
         rows = []
-    df = boa(total_bins, nrows, -999, rows, bins, data, weights, date, True, glob)
+    df = sied(total_bins, nrows, -999, rows, bins, data, weights, date, True, glob)
     print("Cropping")
     df = df[(df.Latitude >= latmin) & (df.Latitude <= latmax) &
             (df.Longitude >= lonmin) & (df.Longitude <= lonmax)]

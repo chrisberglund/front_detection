@@ -1,16 +1,19 @@
-//
-// Created by Christopher Berglund on 11/1/19.
-//
-
 #include <stdbool.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include "cohesion.h"
 
 #define CRIT_C1 0.90
 #define CRIT_C2 0.90
 #define CRIT_C 0.92
 
+/**
+ * Checks the cohesiveness of a window that has a detected threshold. Compares each pixel in the window with all of its
+ * neighbors and counts the ratio between neighbors that are in the same group and the total number of neighbors
+ * @param window pointer to the first element of an array containing the data values for each pixel
+ * @param width the width of the window
+ * @param threshold the threshold detected with the the histogram method
+ * @return true if the window has sufficiently high cohesion coefficients
+ */
 bool isCohesive(const int *window, int width, int threshold) {
     int *copy = malloc(width * width * sizeof(int));
     for (int i = 0; i < width * width; i++) {
