@@ -1,9 +1,9 @@
 #include <math.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include <stdbool.h>
 #include "prefilter.h"
 #include "helpers.h"
+#include "cayula.h"
 
 struct coordinates {
     double latitude;
@@ -26,15 +26,15 @@ struct node {
  * @param nrows the number of rows in the binning scheme
  * @param coords struct to write latitude and longitude values to
  */
-void bin2latlon(int bin, const int *nBinsInRow, const double *latrows, int *basebins, int nrows,
+void bin2latlon(int bin, const double *latrows, struct binRows rows, int nrows,
                 struct coordinates *coords) {
     if (bin < 1) {
         bin = 1;
     }
-    int row = findClosestValue(basebins, 0, nrows, bin) - 1;
+    int row = findClosestValue(rows.basebins, 0, nrows, bin) - 1;
     double clat = latrows[row];
     double clon;
-    clon = 360.0 * (bin - basebins[row] + 0.5) / nBinsInRow[row] - 180.0;
+    clon = 360.0 * (bin - rows.basebins[row] + 0.5) / rows.nbins[row] - 180.0;
     coords->latitude = clat;
     coords->longitude = clon;
 }
@@ -60,42 +60,42 @@ void bin2latlon(int bin, const int *nBinsInRow, const double *latrows, int *base
  * @param chlora if the provided data is chlorophyll concentration, the output data value will be the natural
  * lograithm of the mean data value for each bin
  */
-void createFullBinArray(int totalBins, int nDataBins, int nrows, const int *dataBins, int fillValue,
-                        int *outBins, const double *inData, const double *weights,
-                        double *lats, double *lons, int *nBinsInRow, int *basebins,
-                        int *outData, bool chlora) {
+void createFullBinArray(int totalBins, int nrows, int *outBins, double *lats, double *lons, struct binRows rows,
+                        int *outData) {
     double *latrows = (double *) malloc(sizeof(double) * nrows);
     for (int i = 0; i < nrows; ++i) {
         latrows[i] = ((i + 0.5) * 180.0 / nrows) - 90;
-        nBinsInRow[i] = (int) (2 * nrows * cos(latrows[i] * M_PI / 180.0) + 0.5);
+        rows.nbins[i] = (int) (2 * nrows * cos(latrows[i] * M_PI / 180.0) + 0.5);
         if (i == 0) {
-            basebins[i] = 1;
+            rows.basebins[i] = 1;
         } else {
-            basebins[i] = basebins[i - 1] + nBinsInRow[i - 1];
+            rows.basebins[i] = rows.basebins[i - 1] + rows.nbins[i - 1];
         }
     }
-    double *meanData = (double *) malloc(sizeof(double) * nDataBins);
+
     struct coordinates *coords;
     coords = (struct coordinates *) malloc(sizeof(struct coordinates));
     for (int i = 0; i < totalBins; i++) {
         outBins[i] = i + 1;
-        outData[i] = fillValue;
-        bin2latlon(outBins[i], nBinsInRow, latrows, basebins, nrows, coords);
+        outData[i] = FILL_VALUE;
+        bin2latlon(outBins[i], latrows, rows, nrows, coords);
         lats[i] = coords->latitude;
         lons[i] = coords->longitude;
     }
     free(coords);
     free(latrows);
+}
 
+void calculateDataValues(struct rawData inData, const int *dataBins, int nbins, int *outData, bool chlora) {
     double maxValue = -999.;
     double minValue = 999;
-
-    for (int i = 0; i < nDataBins; i++) {
-        if (inData[i] == fillValue) {
-            meanData[i] = fillValue;
+    double *meanData = (double *) malloc(sizeof(double) * nbins);
+    for (int i = 0; i < nbins; i++) {
+        if (inData.values[i] == FILL_VALUE) {
+            meanData[i] = FILL_VALUE;
             continue;
         }
-        meanData[i] = chlora ? log10(inData[i] / weights[i]) : inData[i] / weights[i];
+        meanData[i] = chlora ? log10(inData.values[i] / inData.weights[i]) : inData.values[i] / inData.weights[i];
         if (meanData[i] < minValue)
             minValue = meanData[i];
         if (meanData[i] > maxValue)
@@ -103,9 +103,9 @@ void createFullBinArray(int totalBins, int nDataBins, int nrows, const int *data
     }
 
 
-    for (int i = 0; i < nDataBins; i++) {
-        if (meanData[i] == fillValue)
-            outData[dataBins[i] - 1] = fillValue;
+    for (int i = 0; i < nbins; i++) {
+        if (meanData[i] == FILL_VALUE)
+            outData[dataBins[i] - 1] = FILL_VALUE;
         else {
             double ratio = (meanData[i] + fabs(minValue)) / fabs(maxValue - minValue);
             outData[dataBins[i] - 1] = (int) floor(ratio * 255);

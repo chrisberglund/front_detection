@@ -10,18 +10,19 @@
 #include "cayula.h"
 #include <math.h>
 
-#define WINDOW_WIDTH 32
+const int WINDOW_WIDTH = 32;
 
 void cayula(int totalBins, int nDataBins, int nrows, int fillValue,
-            int *dataBins, int *rows, double *inData, double *weights, double *lats, double *lons, int *outData,
+            int *dataBins,  const double *inData, const double *weights, double *lats, double *lons, int *outData,
             bool chlora) {
     int *bins = (int *) malloc(totalBins * sizeof(int));
-    int *nBinsInRow = (int *) malloc(nrows * sizeof(int));
-    int *basebins = (int *) malloc(nrows * sizeof(int));
     int *data = (int *) malloc(totalBins * sizeof(int));
-
-    createFullBinArray(totalBins, nDataBins, nrows, dataBins, fillValue,
-                       bins, inData, weights, lats, lons, nBinsInRow, basebins, data, chlora);
+    struct binRows rows;
+    rows.nbins = (int *) malloc(nrows * sizeof(int));
+    rows.basebins = (int *) malloc(nrows * sizeof(int));
+    struct rawData input = {inData, weights};
+    createFullBinArray(totalBins, nrows, bins, lats, lons, rows, data);
+    calculateDataValues(input, dataBins, nDataBins, data, chlora);
 
     int *filteredData = (int *) malloc(totalBins * sizeof(int));
     medianFilter(bins, data, filteredData, totalBins, nrows, nBinsInRow, basebins, fillValue);
@@ -65,8 +66,8 @@ void cayula(int totalBins, int nDataBins, int nrows, int fillValue,
         }
     }
     contour(bins, edgePixels, filteredData, outData, totalBins, nrows, nBinsInRow, basebins, fillValue);
-    free(nBinsInRow);
-    free(basebins);
+    free(rows.nbins);
+    free(rows.basebins);
     free(filteredData);
     free(edgePixels);
     free(bins);

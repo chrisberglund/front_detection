@@ -22,14 +22,12 @@ def sied(total_bins, nrows, fill_value, rows, bins, data, weights, date, chlor_a
     """
     _cayula = ctypes.CDLL('./sied.so')
     _cayula.cayula.argtypes = (ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.POINTER(ctypes.c_int),
-                               ctypes.POINTER(ctypes.c_int),
                                ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double),
                                ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double),
                                ctypes.POINTER(ctypes.c_int), ctypes.c_bool)
     bins_array_type = ctypes.c_int * len(bins)
     lats = (ctypes.c_double * total_bins)()
     lons = (ctypes.c_double * total_bins)()
-    rows = (ctypes.c_int * len(rows))(*rows)
     data_array = (ctypes.c_double * len(data))(*data)
     data_out = (ctypes.c_int * total_bins)()
     weights_array = (ctypes.c_double * len(bins))(*weights)
@@ -89,7 +87,7 @@ def map_bins(dataset, latmin, latmax, lonmin, lonmax, glob):
     else:
         total_bins, nrows, bins, data, weights, date = get_params_modis(dataset, "chlor_a")
         rows = []
-    df = sied(total_bins, nrows, -999, rows, bins, data, weights, date, True, glob)
+    df = sied(total_bins, nrows, -999, rows, bins, data, weights, date, False, glob)
     print("Cropping")
     df = df[(df.Latitude >= latmin) & (df.Latitude <= latmax) &
             (df.Longitude >= lonmin) & (df.Longitude <= lonmax)]
