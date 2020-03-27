@@ -5,17 +5,17 @@
 #include "prefilter.h"
 #include "helpers.h"
 
-struct coordinates {
+typedef struct coordinates {
     double latitude;
     double longitude;
-};
+} coordinates;
 
-struct node {
+typedef struct node {
     struct node *next;
     int bin;
     double lat;
     double lon;
-};
+} node;
 
 /**
  * Determines the latitude and longitude values for the specified bin
@@ -27,7 +27,7 @@ struct node {
  * @param coords struct to write latitude and longitude values to
  */
 void bin2latlon(int bin, const int *nBinsInRow, const double *latrows, int *basebins, int nrows,
-                struct coordinates *coords) {
+                coordinates *coords) {
     if (bin < 1) {
         bin = 1;
     }
@@ -37,6 +37,37 @@ void bin2latlon(int bin, const int *nBinsInRow, const double *latrows, int *base
     clon = 360.0 * (bin - basebins[row] + 0.5) / nBinsInRow[row] - 180.0;
     coords->latitude = clat;
     coords->longitude = clon;
+}
+
+void getLatLon(double *lats, double *lons, int *outRows, int *outBins, int nrows, int totalBins) {
+    double *latrows = (double *) malloc(sizeof(double) * nrows);
+    int *nBinsInRow = (int *) malloc(nrows * sizeof(int));
+    int *basebins = (int *) malloc(nrows * sizeof(int));
+    for (int i = 0; i < nrows; ++i) {
+        latrows[i] = ((i + 0.5) * 180.0 / nrows) - 90;
+        nBinsInRow[i] = (int) (2 * nrows * cos(latrows[i] * M_PI / 180.0) + 0.5);
+        if (i == 0) {
+            basebins[i] = 1;
+        } else {
+            basebins[i] = basebins[i - 1] + nBinsInRow[i - 1];
+        }
+    }
+    coordinates *coords;
+    coords = (coordinates *) malloc(sizeof(coordinates));
+    int row = 0;
+    for (int i = 0; i < totalBins; i++) {
+        if (row + 1 < nrows && i >= basebins[row + 1]) {
+            row++;
+        }
+        outBins[i] = i + 1;
+        outRows[i] = row;
+        bin2latlon(outBins[i], nBinsInRow, latrows, basebins, nrows, coords);
+        lats[i] = coords->latitude;
+        lons[i] = coords->longitude;
+    }
+
+    free(coords);
+    free(latrows);
 }
 
 /**
@@ -64,28 +95,9 @@ void createFullBinArray(int totalBins, int nDataBins, int nrows, const int *data
                         int *outBins, const double *inData, const double *weights,
                         double *lats, double *lons, int *nBinsInRow, int *basebins,
                         int *outData, bool chlora) {
-    double *latrows = (double *) malloc(sizeof(double) * nrows);
-    for (int i = 0; i < nrows; ++i) {
-        latrows[i] = ((i + 0.5) * 180.0 / nrows) - 90;
-        nBinsInRow[i] = (int) (2 * nrows * cos(latrows[i] * M_PI / 180.0) + 0.5);
-        if (i == 0) {
-            basebins[i] = 1;
-        } else {
-            basebins[i] = basebins[i - 1] + nBinsInRow[i - 1];
-        }
-    }
+
     double *meanData = (double *) malloc(sizeof(double) * nDataBins);
-    struct coordinates *coords;
-    coords = (struct coordinates *) malloc(sizeof(struct coordinates));
-    for (int i = 0; i < totalBins; i++) {
-        outBins[i] = i + 1;
-        outData[i] = fillValue;
-        bin2latlon(outBins[i], nBinsInRow, latrows, basebins, nrows, coords);
-        lats[i] = coords->latitude;
-        lons[i] = coords->longitude;
-    }
-    free(coords);
-    free(latrows);
+
 
     double maxValue = -999.;
     double minValue = 999;

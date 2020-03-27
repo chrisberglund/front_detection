@@ -10,8 +10,9 @@
 #include "cayula.h"
 #include <math.h>
 
-#define WINDOW_WIDTH 32
-
+void initialize(double *lats, double *lons, int *outRows, int *outBins, int nrows, int totalBins) {
+    getLatLon(lats, lons, outRows, outBins, nrows, totalBins);
+}
 void cayula(int totalBins, int nDataBins, int nrows, int fillValue,
             int *dataBins, int *rows, double *inData, double *weights, double *lats, double *lons, int *outData,
             bool chlora) {

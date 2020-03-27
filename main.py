@@ -33,7 +33,8 @@ def sied(total_bins, nrows, fill_value, rows, bins, data, weights, date, chlor_a
     data_array = (ctypes.c_double * len(data))(*data)
     data_out = (ctypes.c_int * total_bins)()
     weights_array = (ctypes.c_double * len(bins))(*weights)
-    _cayula.cayula(total_bins, len(bins), nrows, fill_value, bins_array_type(*bins), rows, data_array, weights_array, lats,
+    _cayula.cayula(total_bins, len(bins), nrows, fill_value, bins_array_type(*bins), rows, data_array, weights_array,
+                   lats,
                    lons,
                    data_out, chlor_a)
     lats = list(lats)
@@ -42,6 +43,58 @@ def sied(total_bins, nrows, fill_value, rows, bins, data, weights, date, chlor_a
     df = pd.DataFrame(
         data={"Latitude": lats, "Longitude": lons, "Data": final_data, "Date": np.repeat(date, len(lats))})
     return df
+
+
+def renumber_bins(lats, lons, rows, bins, min_lat=-90, max_lat=90, min_lon=-180, max_lon=180):
+    """
+    Takes coordinates for the original bins and crops to provided extent. Each bin is assigned a new number so that
+    the subset of bins begins with 1.
+    :args
+        :param lats: obj:list: The latitude of each bin. Latitude values should be the same for each bin in a row
+        :param lons: obj:list: The longitude of each bin.
+        :param rows: obj:list: The row number for each bin.
+        :param bins: obj:list: The original bin number for each row
+        :param min_lat: float, optional: The minimum latitude. Defaults to -90.
+        :param max_lat: float, optional: The maximum latitude. Defaults to 90.
+        :param min_lon: float, optional: The minimum longitude. If the desired window crosses the antimeridian,
+            the min_lon should be the positive longitude that will bound the left side of the new map. Defaults to -180.
+        :param max_lon: float, optional: The maximum longitude. Defaults to 180.
+    :returns
+        dataframe: Dataframe containing the original bin information as well as the new bin numbers
+
+    """
+    lons = np.array(lons)
+    if min_lon > 0 and max_lon < 0:
+        min_lon -= 360
+        lons[lons > 0] -= 360
+    df = pd.DataFrame(data={"Latitude": list(lats), "Longitude": lons, "Row": list(rows), "Bin": list(bins)})
+    df = df[(df["Latitude"] >= min_lat) & (df["Latitude"] <= max_lat) & (df["Longitude"] >= min_lon) & (
+                df["Longitude"] <= max_lon)].sort_values(
+        ["Latitude", "Longitude"])
+    df["New_Bin"] = np.arange(1, len(df)+1, 1)
+    return df
+
+
+def crop(total_bins, nrows):
+    """
+    Calculates latitude and longitude
+    :param total_bins:
+    :param nrows:
+    :return:
+    """
+    _cayula = ctypes.CDLL('./sied.so')
+    _cayula.initialize.argtypes = (ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double),
+                                   ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int), ctypes.c_int,
+                                   ctypes.c_int)
+    lats = (ctypes.c_double * total_bins)()
+    lons = (ctypes.c_double * total_bins)()
+    out_bins = (ctypes.c_int * total_bins)()
+    out_rows = (ctypes.c_int * total_bins)()
+    _cayula.initialize(lats, lons, out_rows, out_bins, nrows, total_bins)
+    df = renumber_bins(lats, lons, out_rows, out_bins, min_lat=10, min_lon=20, max_lon=-110)
+    bins = df["New_Bin"].tolist()
+    nbins_in_row = df.groupby("Row").count()["Latitude"].tolist()
+    basebins = df.drop_duplicates("Row")["New_Bin"].tolist()
 
 
 def get_params_modis(dataset, data_str):
@@ -63,17 +116,6 @@ def get_params_modis(dataset, data_str):
     return total_bins, nrows, bins, data, weights, date
 
 
-def get_params_glob(dataset, data_str):
-    total_bins = dataset.nb_grid_bins
-    nrows = 4320
-    bins = dataset.variables["col"][:]
-    rows = dataset.variables["row"][:]
-    weights = []
-    data = dataset.variables["CHL1_mean"][:]
-    date = dataset.period_start_day
-    return total_bins, nrows, rows, bins, data, weights, date
-
-
 def map_bins(dataset, latmin, latmax, lonmin, lonmax, glob):
     """
     Takes a netCDF4 dataset of binned satellite data and creates a geodataframe with coordinates and bin data values
@@ -89,7 +131,8 @@ def map_bins(dataset, latmin, latmax, lonmin, lonmax, glob):
     else:
         total_bins, nrows, bins, data, weights, date = get_params_modis(dataset, "chlor_a")
         rows = []
-    df = sied(total_bins, nrows, -999, rows, bins, data, weights, date, True, glob)
+    df = crop(total_bins, nrows)
+    # df = sied(total_bins, nrows, -999, rows, bins, data, weights, date, True, glob)
     print("Cropping")
     df = df[(df.Latitude >= latmin) & (df.Latitude <= latmax) &
             (df.Longitude >= lonmin) & (df.Longitude <= lonmax)]
@@ -100,12 +143,8 @@ def map_bins(dataset, latmin, latmax, lonmin, lonmax, glob):
 def map_file(args):
     cwd = os.getcwd()
     dataset = Dataset(args["file"])
-    if args["glob"]:
-        year_month = dataset.period_start_day[-2:]
-        date = dataset.period_start_day
-    else:
-        year_month = dataset.time_coverage_start[:7]
-        date = dataset.time_coverage_start[:10]
+    year_month = dataset.time_coverage_start[:7]
+    date = dataset.time_coverage_start[:10]
     if args["file"].endswith("SNPP_CHL.nc"):
         outfile = date + "viirs_chlor.csv"
     else:
