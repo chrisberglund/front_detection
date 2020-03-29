@@ -7,5 +7,7 @@ gcc -std=gnu99 -c -fPIC -pthread -o cohesion.o cohesion.c
 gcc -std=gnu99 -c -fPIC -pthread -o contour.o contour.c
 gcc -std=gnu99 -c -fPIC -pthread -o histogram.o histogram.c
 gcc -std=gnu99 -c -fPIC -pthread -o locator.o locator.c
-gcc -shared -fPIC -pthread -o sied.so filter.o cayula.o helpers.o prefilter.o cohesion.o contour.o histogram.o locator.o
+gcc -std=gnu99 -c -fPIC -pthread -o initialize.o initialize.c
+
+gcc -shared -fPIC -pthread -o sied.so filter.o cayula.o helpers.o prefilter.o cohesion.o contour.o histogram.o locator.o initialize.o
 

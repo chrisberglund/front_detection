@@ -74,8 +74,10 @@ def renumber_bins(lats, lons, rows, bins, min_lat=-90, max_lat=90, min_lon=-180,
     df["New_Bin"] = np.arange(1, len(df)+1, 1)
     return df
 
+class DATA(ctypes.Structure):
+    _fields_ = [("values", ctypes.POINTER(ctypes.c_double)),("weights", ctypes.POINTER(ctypes.c_double))]
 
-def crop(total_bins, nrows):
+def crop(values, weights, data_bins, total_bins, nrows, chlora):
     """
     Calculates latitude and longitude
     :param total_bins:
@@ -83,18 +85,27 @@ def crop(total_bins, nrows):
     :return:
     """
     _cayula = ctypes.CDLL('./sied.so')
-    _cayula.initialize.argtypes = (ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double),
+    _cayula.define.argtypes = (ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double),
                                    ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int), ctypes.c_int,
                                    ctypes.c_int)
+
+    _cayula.initialize.argtypes = (DATA, ctypes.POINTER(ctypes.c_int), ctypes.c_int, ctypes.c_int, ctypes.c_int,
+                                   ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int), ctypes.c_bool)
     lats = (ctypes.c_double * total_bins)()
     lons = (ctypes.c_double * total_bins)()
     out_bins = (ctypes.c_int * total_bins)()
     out_rows = (ctypes.c_int * total_bins)()
-    _cayula.initialize(lats, lons, out_rows, out_bins, nrows, total_bins)
+    _cayula.define(lats, lons, out_rows, out_bins, nrows, total_bins)
     df = renumber_bins(lats, lons, out_rows, out_bins, min_lat=10, min_lon=20, max_lon=-110)
     bins = df["New_Bin"].tolist()
     nbins_in_row = df.groupby("Row").count()["Latitude"].tolist()
     basebins = df.drop_duplicates("Row")["New_Bin"].tolist()
+    in_data = DATA((ctypes.c_double * len(values))(*values),(ctypes.c_double * len(weights))(*weights))
+    out_data = (ctypes.c_int * len(bins))()
+    bins = (ctypes.c_int * len(bins))(*bins)
+    data_bins = (ctypes.c_int * len(data_bins))(*data_bins)
+    print("initialize")
+    print(_cayula.initialize(in_data, out_data, len(bins), len(values), total_bins, data_bins, bins, chlora))
 
 
 def get_params_modis(dataset, data_str):
@@ -131,7 +142,7 @@ def map_bins(dataset, latmin, latmax, lonmin, lonmax, glob):
     else:
         total_bins, nrows, bins, data, weights, date = get_params_modis(dataset, "chlor_a")
         rows = []
-    df = crop(total_bins, nrows)
+    df = crop(data, weights, bins, total_bins, nrows, True)
     # df = sied(total_bins, nrows, -999, rows, bins, data, weights, date, True, glob)
     print("Cropping")
     df = df[(df.Latitude >= latmin) & (df.Latitude <= latmax) &

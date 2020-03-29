@@ -2,9 +2,10 @@
 // Created by Christopher Berglund on 11/2/19.
 //
 
-#ifndef SIED_CAYULA_H
-#define SIED_CAYULA_H
+#ifndef CAYULA_H
+#define CAYULA_H
 
-const int WINDOW_WIDTH = 32;
+#define WINDOW_WIDTH 32
+#define FILL_VALUE -999
 
-#endif //SIED_CAYULA_H
+#endif //CAYULA_H

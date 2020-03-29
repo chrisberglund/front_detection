@@ -10,13 +10,6 @@ typedef struct coordinates {
     double longitude;
 } coordinates;
 
-typedef struct node {
-    struct node *next;
-    int bin;
-    double lat;
-    double lon;
-} node;
-
 /**
  * Determines the latitude and longitude values for the specified bin
  * @param bin bin number for the bin of interest
@@ -39,10 +32,27 @@ void bin2latlon(int bin, const int *nBinsInRow, const double *latrows, int *base
     coords->longitude = clon;
 }
 
-void getLatLon(double *lats, double *lons, int *outRows, int *outBins, int nrows, int totalBins) {
+/*
+ * Function:  getLatLon
+ * --------------------
+ * Calculates the latitude and longitude values for each bin
+ *
+ * args:
+ *      double *lats: pointer to an output array for latitude values
+ *      double *lons: pointer to an output array for longitude values
+ *      int *outRows: pointer to an output array for the row number for each bin
+ *      int *outBins: pointer to an output array for the bin number for each bin
+ *      int nrows: the number of rows in the binning scheme
+ *      int *dataBins: pointer to an array containing the bin number for each data containing bin
+ *      int nbins: number of bins in the binning scheme
+ */
+void getLatLon(double *lats, double *lons, int *outRows, int *outBins, int nrows, int nbins) {
     double *latrows = (double *) malloc(sizeof(double) * nrows);
     int *nBinsInRow = (int *) malloc(nrows * sizeof(int));
     int *basebins = (int *) malloc(nrows * sizeof(int));
+    /*
+     * Get the latitude value for each row and the bin number of the first bin in each row
+     */
     for (int i = 0; i < nrows; ++i) {
         latrows[i] = ((i + 0.5) * 180.0 / nrows) - 90;
         nBinsInRow[i] = (int) (2 * nrows * cos(latrows[i] * M_PI / 180.0) + 0.5);
@@ -55,7 +65,7 @@ void getLatLon(double *lats, double *lons, int *outRows, int *outBins, int nrows
     coordinates *coords;
     coords = (coordinates *) malloc(sizeof(coordinates));
     int row = 0;
-    for (int i = 0; i < totalBins; i++) {
+    for (int i = 0; i < nbins; i++) {
         if (row + 1 < nrows && i >= basebins[row + 1]) {
             row++;
         }
