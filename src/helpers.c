@@ -86,17 +86,18 @@ int median(const int *arr, int length) {
 /*
  * Function:  getWindow
  * --------------------
- * Selects a window of data values centered on a given bin with a given width. 
+ * Selects a window of data values centered on a given bin with a given width. Window must not cross the edge of the
+ * boundaries of the original data map. This function selects the north and south adjacent bins using the ratio
+ * between the position of the bin in its row and the total number of bins in the row.
  *
  * args:
- *      struct InData inData: contains the weighted sum and weight for each bin
- *      int *outData: pointer to the output array
- *      int nbins: number of bins in the area of interest
- *      int nDataBins: number of data containing bins
- *      int nTotalBins: total number of bins in the binning scheme
- *      int *dataBins: pointer to an array containing the bin number for each data containing bin
- *      int *bins: pointer to an array containing the bin number for all bins in the area of interest
- *      bool chlora: whether or not to use the log10 of the data values
+ *      int bin: bin number of the center bin in the window. If the width of the window is even, then this is the upper
+ *      left bin in the center. Bin numbers begin with 1.
+ *      int row: the row number of the center bin. Row numbers begin with 0.
+ *      int width: the width of the desired window. Width must be a positive number greater than 2.
+ *      int *nBinsInRow: pointer to an array containing the number of bins in each row
+ *      int *basebins: pointer to an array containing the bin number for the first bin in each row
+ *      int *window: pointer to output array for the window. The array should be of width * width length
  */
 void getWindow(int bin, int row, int width, const int *data, const int *nBinsInRow,
                const int *basebins, int *window) {
@@ -105,7 +106,8 @@ void getWindow(int bin, int row, int width, const int *data, const int *nBinsInR
     if (width % 2 == 0) {
         int maxDistance = width >> 1;
         int currentRow = row - maxDistance + 1;
-        for (int i = 0; i < width * width; i += width) {   //Iterate through the first bins of each row in window
+        int area = width * width;
+        for (int i = 0; i < area; i += width) {   //Iterate through the first bins of each row in window
             nsNeighbor = ((int) round(ratio * nBinsInRow[currentRow]) + basebins[currentRow]);
             for (int j = 0; j < width; j++) {
                 window[i + j] = data[nsNeighbor + j - maxDistance];
@@ -115,7 +117,8 @@ void getWindow(int bin, int row, int width, const int *data, const int *nBinsInR
     } else {
         int maxDistance = (width - 1) >> 1;
         int currentRow = row - maxDistance;
-        for (int i = 0; i < width * width; i += width) {   //Iterate through the first bins of each row in window
+        int area = width * width;
+        for (int i = 0; i < area; i += width) {   //Iterate through the first bins of each row in window
             nsNeighbor = ((int) round(ratio * nBinsInRow[currentRow]) + basebins[currentRow]);
             for (int j = 0; j < width; j++) {
                 window[i + j] = data[nsNeighbor + j - maxDistance - 1];
