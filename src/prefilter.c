@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
-#include "prefilter.h"
+#include "../include/initialize/prefilter.h"
 #include "helpers.h"
 
 typedef struct coordinates {

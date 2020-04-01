@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "histogram.h"
-#include "prefilter.h"
+#include "../include/initialize/prefilter.h"
 #include "helpers.h"
 #include "cohesion.h"
 #include "locator.h"
@@ -9,7 +9,7 @@
 #include "filter.h"
 #include "cayula.h"
 #include <math.h>
-#include "initialize.h"
+#include "../include/initialize/initialize.h"
 
 void define(double *lats, double *lons, int *outRows, int *outBins, int nrows, int totalBins) {
     getLatLon(lats, lons, outRows, outBins, nrows, totalBins);
