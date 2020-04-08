@@ -9,7 +9,7 @@
 #include "cayula.h"
 
 /*
- * Function:  getIntValues
+ * Function:  get_int_values
  * --------------------
  * Computes the mean data value for each bin and converts it to an integer value between 0 and 255.
  *
@@ -20,7 +20,7 @@
  *      int nbins: number of data containing bins
  *      bool chlora: whether or not to use the log10 of the data values
  */
-static void getIntValues(InData inData, int *outData, const int *dataBins, int nbins, bool chlora) {
+static void get_int_values(InData inData, int *outData, const int *dataBins, int nbins, bool chlora) {
     double *meanData = (double *) malloc(sizeof(double) * nbins);
     double maxValue = -999.;
     double minValue = 999.;
@@ -66,17 +66,16 @@ static void getIntValues(InData inData, int *outData, const int *dataBins, int n
  *      int *bins: pointer to an array containing the bin number for all bins in the area of interest
  *      bool chlora: whether or not to use the log10 of the data values
  */
-int initialize(InData inData, int *outData, int nbins, int nDataBins, int nTotalBins, int *dataBins, const int *bins,
+void initialize(InData inData, int *outData, int nbins, int nDataBins, int nTotalBins, int *dataBins, const int *bins,
                bool chlora) {
     int *data = (int *) malloc(sizeof(int) * nTotalBins);
     for (int i = 0; i < nTotalBins; i++) {
         data[i] = FILL_VALUE;
     }
 
-    getIntValues(inData, data, dataBins, nDataBins, chlora);
+    get_int_values(inData, data, dataBins, nDataBins, chlora);
     for (int i = 0; i < nbins; i++) {
         outData[i] = data[bins[i] - 1];
     }
     free(data);
-    return 1;
 }

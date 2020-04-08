@@ -148,7 +148,7 @@ int followContour(int bin, int row, int *bins, const int *inData, const int *fil
     int nextAngle = 0;
     int dtheta = 0;
     int *binWindow = malloc(9 * sizeof(int));
-    getWindow(bin, row, 3, bins, nBinsInRow, basebins, binWindow, fillValue, false);
+    get_window(bin, row, 3, bins, nBinsInRow, basebins, binWindow, fillValue, false);
     for (int i = 0; i < 9; i++) {
         if (i == 4)
             continue;
@@ -175,7 +175,7 @@ int followContour(int bin, int row, int *bins, const int *inData, const int *fil
 
     if (nextContourPixel == -1) {
         int *dataWindow = malloc(25 * sizeof(int));
-        getWindow(bin, row, 5, filteredData, nBinsInRow, basebins, dataWindow, fillValue, false);
+        get_window(bin, row, 5, filteredData, nBinsInRow, basebins, dataWindow, fillValue, false);
         ratio = getGradientRatio(dataWindow, fillValue);
         free(dataWindow);
         if (ratio > 0.7) {
@@ -184,15 +184,15 @@ int followContour(int bin, int row, int *bins, const int *inData, const int *fil
             struct gradientVector gradient1;
             int maxIndex = -1;
             int *smallWindow = malloc(9 * sizeof(int));
-            getWindow(bin, row, 3, filteredData, nBinsInRow, basebins, smallWindow, fillValue, false);
+            get_window(bin, row, 3, filteredData, nBinsInRow, basebins, smallWindow, fillValue, false);
             struct gradientVector gradient0 = gradient(smallWindow, fillValue);
             for (int i = 0; i < 3; i++) {
                 for (int j = 0; j < 3; j++) {
                     if (i == 1 && j == 1) {
                         continue;
                     }
-                    getWindow(binWindow[i * 3 + j], row + j - 1, 3, filteredData,
-                              nBinsInRow, basebins, smallWindow, fillValue, false);
+                    get_window(binWindow[i * 3 + j], row + j - 1, 3, filteredData,
+                               nBinsInRow, basebins, smallWindow, fillValue, false);
                     gradient1 = gradient(smallWindow, fillValue);
                     product = (gradient0.x * gradient1.x) + (gradient0.y * gradient1.y);
                     if (product > maxProduct) {

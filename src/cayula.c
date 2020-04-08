@@ -15,6 +15,10 @@ void define(double *lats, double *lons, int *outRows, int *outBins, int nrows, i
     getLatLon(lats, lons, outRows, outBins, nrows, totalBins);
 }
 
+void cayula(int *bins, int *data, int ntotalBins, int nrows, int nBinsInRow, int *basebins) {
+    median_filter(bins, data, filteredData, totalBins, nrows, nBinsInRow, basebins)
+}
+
 void cayula(int totalBins, int nDataBins, int nrows, int fillValue,
             int *dataBins, int *rows, double *inData, double *weights, double *lats, double *lons, int *outData,
             bool chlora) {
@@ -27,7 +31,7 @@ void cayula(int totalBins, int nDataBins, int nrows, int fillValue,
                        bins, inData, weights, lats, lons, nBinsInRow, basebins, data, chlora);
 
     int *filteredData = (int *) malloc(totalBins * sizeof(int));
-    medianFilter(bins, data, filteredData, totalBins, nrows, nBinsInRow, basebins, fillValue);
+    median_filter(bins, data, filteredData, totalBins, nrows, nBinsInRow, basebins, fillValue);
 
     int *edgePixels = (int *) malloc(totalBins * sizeof(int));
 
@@ -45,8 +49,8 @@ void cayula(int totalBins, int nDataBins, int nrows, int fillValue,
                 continue;
             int *window = (int *) malloc(WINDOW_WIDTH * WINDOW_WIDTH * sizeof(int));
             int *binWindow = (int *) malloc(WINDOW_WIDTH * WINDOW_WIDTH * sizeof(int));
-            getWindow(basebins[i] + j, i, WINDOW_WIDTH, filteredData, nBinsInRow, basebins, window, fillValue, false);
-            getWindow(basebins[i] + j, i, WINDOW_WIDTH, bins, nBinsInRow, basebins, binWindow, fillValue, false);
+            get_window(basebins[i] + j, i, WINDOW_WIDTH, filteredData, nBinsInRow, basebins, window, fillValue, false);
+            get_window(basebins[i] + j, i, WINDOW_WIDTH, bins, nBinsInRow, basebins, binWindow, fillValue, false);
             int threshold = histogramAnalysis(window, WINDOW_WIDTH, 256);
 
             if (threshold > 0) {
