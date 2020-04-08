@@ -1,11 +1,9 @@
-**
+/*
 * Functions for applying the contextual median filter to an array of bins using sliding 5x5 and 3x3 windows
 */
 
 #include <stdlib.h>
 #include <math.h>
-#include <stdbool.h>
-#include <stdio.h>
 #include "filter.h"
 #include "helpers.h"
 #include "cayula.h"
