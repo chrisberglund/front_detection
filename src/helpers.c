@@ -5,82 +5,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include "helpers.h"
-
-void swap(int *a, int *b) {
-    int t = *a;
-    *a = *b;
-    *b = t;
-}
-
-int partition(int *array, int left, int right, int pivot) {
-    double pivotValue = array[pivot];
-    swap(&array[pivot], &array[right]);
-    int storeIndex = left;
-    for (int i = left; i < right; i++) {
-        if (array[i] <= pivotValue) {
-            swap(&array[i], &array[storeIndex]);
-            storeIndex++;
-        }
-    }
-    swap(&array[storeIndex], &array[right]);
-    return storeIndex;
-}
-
-/**
- * Serial Quicksort implementation.
- */
-void sort(int *array, int left, int right) {
-    if (right > left) {
-        int pivotIndex = left + (right - left) / 2;
-        pivotIndex = partition(array, left, right, pivotIndex);
-        sort(array, left, pivotIndex - 1);
-        sort(array, pivotIndex + 1, right);
-    }
-}
-
-/**
- * Finds the index of the closest value in a sorted array
- * @param arr sorted array
- * @param l index of the left most value of interest
- * @param r index of the right most value of interest
- * @param x value to search for
- * @return index of the closest value in the array
- */
-int findClosestValue(int arr[], int l, int r, int x) {
-    int mid = l + (r - l) / 2;
-    if (r >= l) {
-        if (arr[mid] == x)
-            return mid;
-
-        if (arr[mid] > x)
-            return findClosestValue(arr, l, mid - 1, x);
-
-        return findClosestValue(arr, mid + 1, r, x);
-    }
-
-    return mid;
-}
-
-int median(const int *arr, int length) {
-    int *copy = (int *) malloc(length * sizeof(int));
-    int median;
-    bool isSorted = true;
-    for (int i = 0; i < length; i++) {
-        if (i > 0) {
-            if (arr[i] < arr[i-1]) isSorted = false;
-        }
-        copy[i] = arr[i];
-    }
-    if (!isSorted)
-        sort(copy, 0, length - 1);
-
-    median = length % 2 == 0 ? (copy[((length - 1) / 2) - 1] + copy[(length - 1) / 2]) / 2 : copy[(int) round(
-            (length - 1) / 2.0)];
-
-    free(copy);
-    return median;
-}
-
+#include "cayula.h"
 
 /*
  * Function:  get_window
@@ -97,9 +22,12 @@ int median(const int *arr, int length) {
  *      int *n_bins_in_row: pointer to an array containing the number of bins in each row
  *      int *basebins: pointer to an array containing the bin number for the first bin in each row
  *      int *window: pointer to output array for the window. The array should be of width * width length
+ * returns:
+ *      int 0 if the window contains a fill value, 1 if all values in the window are valid
  */
-void get_window(int bin, int row, int width, const int *data, const int *n_bins_in_row,
+int get_window(int bin, int row, int width, const int *data, const int *n_bins_in_row,
                 const int *basebins, int window[]) {
+    int nfill_values = 0;
     int column_neighbor;
     double ratio = (bin - basebins[row]) / (double) n_bins_in_row[row];
     if (width % 2 == 0) {
@@ -121,8 +49,11 @@ void get_window(int bin, int row, int width, const int *data, const int *n_bins_
             column_neighbor = ((int) round(ratio * n_bins_in_row[current_row]) + basebins[current_row]);
             for (int j = 0; j < width; j++) {
                 window[i + j] = data[column_neighbor + j - max_distance - 1];
+                if (window[i+j] == FILL_VALUE)
+                    nfill_values++;
             }
             current_row++;
         }
     }
+    return nfill_values;
 }
