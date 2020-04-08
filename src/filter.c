@@ -1,5 +1,5 @@
 /*
-* Functions for applying the contextual median filter to an array of bins using sliding 5x5 and 3x3 windows
+* Functions for applying the median filter to an array of bins using sliding 3x3 window
 */
 
 #include <stdlib.h>
