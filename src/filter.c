@@ -1,10 +1,8 @@
 /*
 * Functions for applying the median filter to an array of bins using sliding 3x3 window
 */
-
-#include <stdlib.h>
 #include <math.h>
-#include <stdio.h>
+#include <stdlib.h>
 #include "filter.h"
 #include "helpers.h"
 #include "cayula.h"
@@ -20,7 +18,7 @@
  * args:
  *      int *a: pointer to the array from which to get the median. The array must be exactly 9 elements long.
  */
-static int median9(int * p) {
+int median9(int * p) {
     BIN_SORT(p[1], p[2]) ; BIN_SORT(p[4], p[5]) ; BIN_SORT(p[7], p[8]) ;
     BIN_SORT(p[0], p[1]) ; BIN_SORT(p[3], p[4]) ; BIN_SORT(p[6], p[7]) ;
     BIN_SORT(p[1], p[2]) ; BIN_SORT(p[4], p[5]) ; BIN_SORT(p[7], p[8]) ;
@@ -104,7 +102,6 @@ void median_filter(int *data, int *filtered_data, int nbins, int nrows,
     int window[9];
     int row = 0;
     for (int i = 0; i < nbins; i++) {
-        //printf("%d \n", data[i]);
         if (i + 1 == basebins[row] + nbins_in_row[row]) {
             row++;
         }

@@ -11,3 +11,6 @@ freq/
 /freq.py
 *.csv
 kud/
+build/
+test/support
+project.yml
