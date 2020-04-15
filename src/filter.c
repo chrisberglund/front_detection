@@ -6,6 +6,7 @@
 #include "filter.h"
 #include "helpers.h"
 #include "cayula.h"
+#include <stdio.h>
 
 #define BIN_SORT(a,b) { if ((a)>(b)) BIN_SWAP((a),(b)); }
 #define BIN_SWAP(a,b) { int temp=(a);(a)=(b);(b)=temp; }
@@ -69,7 +70,7 @@ static void sort9 (int *a) {
  * returns:
  *      int: the median of the array after excluding fill values
  */
-static int medianN(int * p, int n_invalid) {
+int medianN(int * p, int n_invalid) {
     if (n_invalid == 9) return FILL_VALUE;
     sort9(p);
     int n = 9 - n_invalid;
