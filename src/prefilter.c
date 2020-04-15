@@ -19,12 +19,11 @@ typedef struct coordinates {
  * @param nrows the number of rows in the binning scheme
  * @param coords struct to write latitude and longitude values to
  */
-void bin2latlon(int bin, const int *nBinsInRow, const double *latrows, int *basebins, int nrows,
+void bin2latlon(int bin, int row, const int *nBinsInRow, const double *latrows, int *basebins, int nrows,
                 coordinates *coords) {
     if (bin < 1) {
         bin = 1;
     }
-    int row = findClosestValue(basebins, 0, nrows, bin) - 1;
     double clat = latrows[row];
     double clon;
     clon = 360.0 * (bin - basebins[row] + 0.5) / nBinsInRow[row] - 180.0;
@@ -71,7 +70,7 @@ void getLatLon(double *lats, double *lons, int *outRows, int *outBins, int nrows
         }
         outBins[i] = i + 1;
         outRows[i] = row;
-        bin2latlon(outBins[i], nBinsInRow, latrows, basebins, nrows, coords);
+        bin2latlon(outBins[i], row, nBinsInRow, latrows, basebins, nrows, coords);
         lats[i] = coords->latitude;
         lons[i] = coords->longitude;
     }

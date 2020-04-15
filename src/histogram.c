@@ -6,40 +6,32 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <string.h>
 #include <math.h>
 #include "helpers.h"
 
 
 #define CRIT_VALUE 0.7
 
-/**
- * Constructs a histogram
- * @param data data to construct histogram with
- * @param npixels number of pixels in data set
- * @param nbins number of bins for the histogram to contain
- * @return pointer to an array containing all the bins of the histogram. Caller is responsible for freeing
+/*
+ * 
  */
-double *getHistogram(const int *data, int npixels, int nbins) {
-    int *occurrence = (int *) malloc(sizeof(int) * nbins);
-    double *histogram = (double *) malloc(sizeof(double) * nbins);
-    for (int i = 0; i < nbins; i++) occurrence[i] = 0;
-    for (int i = 0; i < nbins; i++) histogram[i] = 0;
+void get_histogram(const int *data, double *histogram, int n_pixels) {
+    int occurrence[256] = {0};
+    memset(histogram, 0, sizeof(int) * 256);
     int nvalid = 0;
-    for (int i = 0; i < npixels; i++) {
+    for (int i = 0; i < n_pixels; i++) {
         if (data[i] != -999) {
-            int test = data[i];
             occurrence[data[i]]++;
             nvalid++;
         }
     }
-    for (int i = 0; i < nbins; i++) {
+    for (int i = 0; i < 256; i++) {
         if (nvalid > 0)
             histogram[i] = (double) occurrence[i] / nvalid;
         else
             histogram[i] = 0;
     }
-    free(occurrence);
-    return histogram;
 }
 
 /**
@@ -132,7 +124,7 @@ bool isTooLarge(const int *window, int width, int threshold) {
     for (int i = 0; i < (width * width); i++) {
         copy[i] = window[i];
     }
-    sort(copy, 0, (width * width) - 1);
+    //sort(copy, 0, (width * width) - 1);
     int i = 0;
     while (copy[i] < threshold) {
         i++;
@@ -148,15 +140,19 @@ bool isTooLarge(const int *window, int width, int threshold) {
  * @param nvalues
  * @return threshold value, -1 if unimodal
  */
-int histogramAnalysis(int *window, int width, int nvalues) {
-    double *histogram = getHistogram(window, width * width, nvalues);
-    double between, mulow, muhigh, mulowMax, muhighMax, num, dem;
+int histogram_analysis(int *window, int width, int nvalues) {
+    double histogram[256];
+    get_histogram(window, histogram, nvalues);
+    double between, mu_low, mu_high, mu_low_max, mu_high_max, num, dem;
     double nlow = 0, nhigh = 0, nlowMax = 0, nhighMax = 0;
     double maxBetween = 0;
     int threshold = -1;
     for (int i = 1; i < nvalues - 1; i++) {  //Assuming 0 or nvalues can't be the best threshold
         nlow = 0;
         nhigh = 0;
+        /*
+         * Calculate statistics for body below current threshold
+         */
         num = 0;
         dem = 0;
         for (int j = 0; j < i; j++) {
@@ -164,9 +160,11 @@ int histogramAnalysis(int *window, int width, int nvalues) {
             num += (j) * histogram[j];
             dem += histogram[j];
         }
-        if (dem == 0)
-            continue;
-        mulow = num / dem;
+        if (dem == 0) continue;
+        mu_low = num / dem;
+        /*
+         * Calculate statistics for body below current threshold
+         */
         num = 0;
         dem = 0;
         for (int j = i; j < nvalues; j++) {
@@ -174,32 +172,31 @@ int histogramAnalysis(int *window, int width, int nvalues) {
             num += (j) * histogram[j];
             dem += histogram[j];
         }
-        if (dem == 0)
-            continue;
-        muhigh = num / dem;
-        between = betweenGroupVariance(mulow, muhigh, nlow, nhigh);
+        if (dem == 0) continue;
+        mu_high = num / dem;
+        between = betweenGroupVariance(mu_low, mu_high, nlow, nhigh);
         if (i == 1) {
             threshold = i;
             maxBetween = between;
             nlowMax = nlow;
             nhighMax = nhigh;
-            mulowMax = mulow;
-            muhighMax = muhigh;
+            mu_low_max = mu_low;
+            mu_high_max = mu_high;
         }
         if (between > maxBetween) {
             threshold = i;
             maxBetween = between;
             nlowMax = nlow;
             nhighMax = nhigh;
-            mulowMax = mulow;
-            muhighMax = muhigh;
+            mu_low_max = mu_low;
+            mu_high_max = mu_high;
         }
     }
 
     if (isTooLarge(window, width, threshold))
         return -1;
 
-    double within = withinGroupVariance(histogram, mulowMax, muhighMax, nlowMax, nhighMax, threshold, nvalues);
+    double within = withinGroupVariance(histogram, mu_low_max, mu_high_max, nlowMax, nhighMax, threshold, nvalues);
     double theta = maxBetween / (maxBetween + within);
     free(histogram);
     if (theta >= CRIT_VALUE && !isTooLarge(window, width, threshold)) {

@@ -96,16 +96,22 @@ def crop(values, weights, data_bins, total_bins, nrows, chlora):
     out_bins = (ctypes.c_int * total_bins)()
     out_rows = (ctypes.c_int * total_bins)()
     _cayula.define(lats, lons, out_rows, out_bins, nrows, total_bins)
-    df = renumber_bins(lats, lons, out_rows, out_bins, min_lat=10, min_lon=20, max_lon=-110)
+    df = renumber_bins(lats, lons, out_rows, out_bins, min_lat=10, max_lat=70, min_lon=20, max_lon=-110)
     bins = df["New_Bin"].tolist()
-    nbins_in_row = df.groupby("Row").count()["Latitude"].tolist()
-    basebins = df.drop_duplicates("Row")["New_Bin"].tolist()
+    nrows = len(df.groupby("Row").count()["Latitude"])
+    nbins_in_row = (ctypes.c_int * nrows)(*df.groupby("Row").count()["Latitude"].tolist())
+    basebins = (ctypes.c_int * nrows)(*df.drop_duplicates("Row")["New_Bin"].tolist())
     in_data = DATA((ctypes.c_double * len(values))(*values),(ctypes.c_double * len(weights))(*weights))
     out_data = (ctypes.c_int * len(bins))()
     bins = (ctypes.c_int * len(bins))(*bins)
     data_bins = (ctypes.c_int * len(data_bins))(*data_bins)
-    print("initialize")
-    print(_cayula.initialize(in_data, out_data, len(bins), len(values), total_bins, data_bins, bins, chlora))
+    _cayula.initialize(in_data, out_data, len(bins), len(values), total_bins, data_bins, bins, chlora)
+    df["Data"] = out_data
+    out_out_data = (ctypes.c_int * len(bins))
+    _cayula.cayula.argtypes = (ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int), ctypes.c_int,
+                               ctypes.c_int, ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int))
+    _cayula.cayula(bins, out_data, len(bins), nrows, nbins_in_row, basebins)
+    df.to_csv("~/Desktop/testing.csv", index=False)
 
 
 def get_params_modis(dataset, data_str):
@@ -184,7 +190,7 @@ def map_files(directory, latmin, latmax, lonmin, lonmax):
     :param lonmin: minimum longitude to include in output
     :param lonmax: maximum longitude to include in output
     """
-    cwd = os.getcwd()
+    cwd = "../" + os.getcwd()
     glob = False
     files = []
     outfiles = []

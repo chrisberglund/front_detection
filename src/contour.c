@@ -48,7 +48,7 @@ void replaceFillValue(int *window, int fillValue) {
                 validCount++;
             }
         }
-        int mdn = median(validValues, 9 - counter);
+        int mdn = 4;//median(validValues, 9 - counter);
         free(validValues);
         for (int i = 0; i < 9; i++) {
             if (window[i] == fillValue) {
@@ -142,6 +142,7 @@ double getGradientRatio(const int *window, int fillValue) {
  */
 int followContour(int bin, int row, int *bins, const int *inData, const int *filteredData, bool *isInContour,
                   const int *nBinsInRow, const int *basebins, int fillValue, struct subnode *tail) {
+    /*
     int count = 1;
     int nextContourPixel = -1;
     int minDTheta = 180;
@@ -233,7 +234,8 @@ int followContour(int bin, int row, int *bins, const int *inData, const int *fil
                                fillValue, tmp);
     }
 
-    return count;
+    return count;*/
+    return 0;
 }
 
 void clearSubList(struct node *head) {

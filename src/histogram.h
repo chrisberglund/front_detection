@@ -4,5 +4,5 @@
 #include <stdbool.h>
 #ifndef SIED_HISTOGRAM_H
 #define SIED_HISTOGRAM_H
-int histogramAnalysis(int *window, int width, int nvalues);
+int histogram_analysis(int *window, int width, int nvalues);
 #endif //SIED_HISTOGRAM_H

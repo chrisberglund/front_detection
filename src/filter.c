@@ -4,6 +4,7 @@
 
 #include <stdlib.h>
 #include <math.h>
+#include <stdio.h>
 #include "filter.h"
 #include "helpers.h"
 #include "cayula.h"
@@ -103,12 +104,12 @@ void median_filter(int *data, int *filtered_data, int nbins, int nrows,
     int window[9];
     int row = 0;
     for (int i = 0; i < nbins; i++) {
-
-        if (i == basebins[row] + nbins_in_row[row]) {
+        //printf("%d \n", data[i]);
+        if (i + 1 == basebins[row] + nbins_in_row[row]) {
             row++;
         }
 
-        if (row == 0 || row >= nrows -  1) {
+        if (row == 3 || row >= nrows -  3) {
             filtered_data[i] = FILL_VALUE;
         } else if ( i + 1 <= basebins[row] ||  i + 1 >= basebins[row + 1] - 1) {
             filtered_data[i] = FILL_VALUE;
