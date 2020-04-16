@@ -17,3 +17,5 @@ project.yml
 test/unity.c
 test/unity.h
 test/unity_internals.h
+test_filter.out.stackdump
+test_helpers.out.stackdump
