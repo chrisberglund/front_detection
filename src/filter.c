@@ -19,7 +19,7 @@
  * args:
  *      int *a: pointer to the array from which to get the median. The array must be exactly 9 elements long.
  */
-int median9(int * p) {
+static int median9(int * p) {
     BIN_SORT(p[1], p[2]) ; BIN_SORT(p[4], p[5]) ; BIN_SORT(p[7], p[8]) ;
     BIN_SORT(p[0], p[1]) ; BIN_SORT(p[3], p[4]) ; BIN_SORT(p[6], p[7]) ;
     BIN_SORT(p[1], p[2]) ; BIN_SORT(p[4], p[5]) ; BIN_SORT(p[7], p[8]) ;
@@ -70,7 +70,7 @@ static void sort9 (int *a) {
  * returns:
  *      int: the median of the array after excluding fill values
  */
-int medianN(int * p, int n_invalid) {
+static int medianN(int * p, int n_invalid) {
     if (n_invalid == 9) return FILL_VALUE;
     sort9(p);
     int n = 9 - n_invalid;
@@ -107,7 +107,7 @@ void median_filter(int *data, int *filtered_data, int nbins, int nrows,
             row++;
         }
 
-        if (row == 3 || row >= nrows -  3) {
+        if (row == 0 || row >= nrows -  1) {
             filtered_data[i] = FILL_VALUE;
         } else if ( i + 1 <= basebins[row] ||  i + 1 >= basebins[row + 1] - 1) {
             filtered_data[i] = FILL_VALUE;

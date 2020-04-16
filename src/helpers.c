@@ -38,7 +38,7 @@ int findClosestValue(int arr[], int l, int r, int x) {
  *      int *basebins: pointer to an array containing the bin number for the first bin in each row
  *      int *window: pointer to output array for the window. The array should be of width * width length
  * returns:
- *      int 0 if the window contains a fill value, 1 if all values in the window are valid
+ *      int the number of fill values contained in the window
  */
 int get_window(int bin, int row, int width, const int *data, const int *n_bins_in_row,
                 const int *basebins, int window[]) {
