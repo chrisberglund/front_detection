@@ -31,7 +31,7 @@ void test_filter_medianN(void) {
     mdn = medianN(arr3, 9);
     TEST_ASSERT_EQUAL_INT(FILL_VALUE, mdn);
 }
-
+/*
 void test_filter_median_filter(void) {
     int arr[144] = {148, 66, 169, 185, 255, 241, 84, 41, 80, 100, 136, 74,
                     245, 216, 38, 110, 127, 2, 203, 152, 248, 44, 237, 23,
@@ -62,3 +62,4 @@ void test_filter_median_filter(void) {
     free(data);
     free(filtered_data);
 }
+*/
