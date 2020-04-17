@@ -1,5 +1,4 @@
 #include "unity.h"
-
 #include <stdlib.h>
 #include "helpers.h"
 #include "filter.h"

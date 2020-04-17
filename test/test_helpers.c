@@ -55,4 +55,6 @@ void test_get_window_fill_values(void) {
     int n_invalid = get_window(34, 4, 3, arr, n_bins_in_row, basebins, window);
     TEST_ASSERT_EQUAL_INT_ARRAY(expected_window, window, 9);
     TEST_ASSERT_EQUAL_INT(2, n_invalid);
+
+    //TEST_ASSERT_EQUAL_DOUBLE(0.2,0.2);
 }

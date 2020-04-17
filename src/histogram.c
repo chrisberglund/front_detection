@@ -18,7 +18,9 @@
  */
 void get_histogram(const int *data, double *histogram, int n_pixels) {
     int occurrence[256] = {0};
-    memset(histogram, 0, sizeof(int) * 256);
+    for (int i = 0; i < 256; i++) {
+        histogram[i] = 0;
+    }
     int nvalid = 0;
     for (int i = 0; i < n_pixels; i++) {
         if (data[i] != -999) {
@@ -142,12 +144,12 @@ bool isTooLarge(const int *window, int width, int threshold) {
  */
 int histogram_analysis(int *window, int width, int nvalues) {
     double histogram[256];
-    get_histogram(window, histogram, nvalues);
+    get_histogram(window, histogram, 1024);
     double between, mu_low, mu_high, mu_low_max, mu_high_max, num, dem;
     double nlow = 0, nhigh = 0, nlowMax = 0, nhighMax = 0;
     double maxBetween = 0;
     int threshold = -1;
-    for (int i = 1; i < nvalues - 1; i++) {  //Assuming 0 or nvalues can't be the best threshold
+    for (int i = 1; i < 255; i++) {  //Assuming 0 or nvalues can't be the best threshold
         nlow = 0;
         nhigh = 0;
         /*
@@ -167,7 +169,7 @@ int histogram_analysis(int *window, int width, int nvalues) {
          */
         num = 0;
         dem = 0;
-        for (int j = i; j < nvalues; j++) {
+        for (int j = i; j < 256; j++) {
             nhigh += histogram[j];
             num += (j) * histogram[j];
             dem += histogram[j];
@@ -198,7 +200,7 @@ int histogram_analysis(int *window, int width, int nvalues) {
 
     double within = withinGroupVariance(histogram, mu_low_max, mu_high_max, nlowMax, nhighMax, threshold, nvalues);
     double theta = maxBetween / (maxBetween + within);
-    free(histogram);
+
     if (theta >= CRIT_VALUE && !isTooLarge(window, width, threshold)) {
         return threshold;
     } else {
