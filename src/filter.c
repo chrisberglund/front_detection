@@ -6,7 +6,6 @@
 #include "filter.h"
 #include "helpers.h"
 #include "cayula.h"
-#include <stdio.h>
 
 #define BIN_SORT(a,b) { if ((a)>(b)) BIN_SWAP((a),(b)); }
 #define BIN_SWAP(a,b) { int temp=(a);(a)=(b);(b)=temp; }
