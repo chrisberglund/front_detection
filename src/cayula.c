@@ -17,6 +17,7 @@ void define(double *lats, double *lons, int *outRows, int *outBins, int nrows, i
 
 void cayula(int *bins, int *data, int *out_data, int n_bins, int nrows, int *n_bins_in_row, int *basebins) {
     int *filtered_data = malloc(n_bins * sizeof(int));
+
     median_filter(data, filtered_data, n_bins, nrows, n_bins_in_row, basebins);
     int *edgePixels = (int *) malloc(n_bins * sizeof(int));
     for (int i = 0; i < n_bins; i++) {

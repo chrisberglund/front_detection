@@ -2,7 +2,6 @@
 * Functions for applying the median filter to an array of bins using sliding 3x3 window
 */
 #include <math.h>
-#include <stdlib.h>
 #include "filter.h"
 #include "helpers.h"
 #include "cayula.h"
@@ -77,7 +76,7 @@ static int medianN(int * p, int n_invalid) {
     for (int i = n_invalid; i < 9; i++) {
         arr[i - n_invalid] = p[i];
     }
-    return n & 1  ? arr[(n - 1) >> 1] : (arr[n >> 1] + arr[(n >> 1) - 1] + 1) >> 1;
+    return n & 1 ? arr[(n - 1) >> 1] : (arr[n >> 1] + arr[(n >> 1) - 1] + 1) >> 1;
 }
 
 /*
@@ -95,13 +94,12 @@ static int medianN(int * p, int n_invalid) {
  *      int *nbins_in_row: pointer to an array the number of bins in each row
  *      int *basebins: pointer to an array containing the bin number of the first bin in each row
  */
-void median_filter(int *data, int *filtered_data, int nbins, int nrows,
-                   int *nbins_in_row, int *basebins) {
+void median_filter(int *data, int *filtered_data, int nbins, int nrows, int *nbins_in_row, int *basebins) {
     int window[9];
     int last_row = nrows - 1;
     /*
      * Fill in the first and last row with fill values. Then iterate through the remaining rows while filling the
-     * first and last row with fill values and the rest with the result of the median filter.
+     * first and last bin of each row with fill values and the rest with the result of the median filter.
      */
     for (int i = 0; i < basebins[0] + nbins_in_row[0]; i++) filtered_data[i] = FILL_VALUE;
     for (int i = basebins[last_row]; i < basebins[last_row] + nbins_in_row[last_row]; i++) filtered_data[i] = FILL_VALUE;
@@ -117,5 +115,4 @@ void median_filter(int *data, int *filtered_data, int nbins, int nrows,
             }
         }
     }
-
 }
