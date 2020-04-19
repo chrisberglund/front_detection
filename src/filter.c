@@ -77,7 +77,7 @@ static int medianN(int * p, int n_invalid) {
     for (int i = n_invalid; i < 9; i++) {
         arr[i - n_invalid] = p[i];
     }
-    return n & 1 ? arr[(n - 1) >> 1] : (arr[n >> 1] + arr[(n >> 1) - 1] + 1) >> 1;
+    return n & 1  ? arr[(n - 1) >> 1] : (arr[n >> 1] + arr[(n >> 1) - 1] + 1) >> 1;
 }
 
 /*
@@ -109,8 +109,12 @@ void median_filter(int *data, int *filtered_data, int nbins, int nrows,
         filtered_data[basebins[i]] = FILL_VALUE;
         filtered_data[basebins[i] + nbins_in_row[i] - 1] = FILL_VALUE;
         for (int j = basebins[i] + 1; j < basebins[i] + nbins_in_row[i] - 1; j++) {
-            int n_invalid = get_window(j, i, 3, data, nbins_in_row, basebins, window);
-            filtered_data[j] =  n_invalid == 0 ? median9(window) : medianN(window, n_invalid);
+            if (data[j] == FILL_VALUE) {
+                filtered_data[j] = FILL_VALUE;
+            } else {
+                int n_invalid = get_window(j, i, 3, data, nbins_in_row, basebins, window);
+                filtered_data[j] = n_invalid == 0 ? median9(window) : medianN(window, n_invalid);
+            }
         }
     }
 
