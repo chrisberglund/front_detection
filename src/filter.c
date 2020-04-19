@@ -20,13 +20,13 @@
  *      int *a: pointer to the array from which to get the median. The array must be exactly 9 elements long.
  */
 static int median9(int * p) {
-    BIN_SORT(p[1], p[2]) ; BIN_SORT(p[4], p[5]) ; BIN_SORT(p[7], p[8]) ;
-    BIN_SORT(p[0], p[1]) ; BIN_SORT(p[3], p[4]) ; BIN_SORT(p[6], p[7]) ;
-    BIN_SORT(p[1], p[2]) ; BIN_SORT(p[4], p[5]) ; BIN_SORT(p[7], p[8]) ;
-    BIN_SORT(p[0], p[3]) ; BIN_SORT(p[5], p[8]) ; BIN_SORT(p[4], p[7]) ;
-    BIN_SORT(p[3], p[6]) ; BIN_SORT(p[1], p[4]) ; BIN_SORT(p[2], p[5]) ;
-    BIN_SORT(p[4], p[7]) ; BIN_SORT(p[4], p[2]) ; BIN_SORT(p[6], p[4]) ;
-    BIN_SORT(p[4], p[2]) ; return(p[4]) ;
+    BIN_SORT(p[1], p[2]);  BIN_SORT(p[4], p[5]);  BIN_SORT(p[7], p[8]);
+    BIN_SORT(p[0], p[1]);  BIN_SORT(p[3], p[4]);  BIN_SORT(p[6], p[7]);
+    BIN_SORT(p[1], p[2]);  BIN_SORT(p[4], p[5]);  BIN_SORT(p[7], p[8]);
+    BIN_SORT(p[0], p[3]);  BIN_SORT(p[5], p[8]);  BIN_SORT(p[4], p[7]);
+    BIN_SORT(p[3], p[6]);  BIN_SORT(p[1], p[4]);  BIN_SORT(p[2], p[5]);
+    BIN_SORT(p[4], p[7]);  BIN_SORT(p[4], p[2]);  BIN_SORT(p[6], p[4]);
+    BIN_SORT(p[4], p[2]);  return(p[4]);
 }
 
 
@@ -37,10 +37,10 @@ static int median9(int * p) {
 /*
  * Function:  sort9
  * --------------------
- * Uses a sorting network to sort the given array of 9 elements
+ * Uses a sorting network to sort the given array of 9 elements in ascending order
  *
  * args:
- *      int *a: pointer to the array to sort. The array must be exactly 9 elements long.
+ *      int *a: pointer to the array to sort. The array must be exactly 9 elements long. The array is sorted in place
  */
 static void sort9 (int *a) {
     int a0, a1, a2, a3, a4, a5, a6, a7, a8;
@@ -61,7 +61,7 @@ static void sort9 (int *a) {
  * --------------------
  * Determines the median of the given array containing fill values. Provided there is at least one valid value in the
  * array, the median is determined using all valid values in the array. If removing fill values results in an array of
- * even length, the median is the average of the two middle values rounded to an int.
+ * even length, the median is the average of the two middle values rounded up to nearest integer.
  *
  * args:
  *      int *p: pointer to the input array
@@ -74,12 +74,11 @@ static int medianN(int * p, int n_invalid) {
     if (n_invalid == 9) return FILL_VALUE;
     sort9(p);
     int n = 9 - n_invalid;
-    int *arr = malloc(n * sizeof(int));
+    int arr[n];
     for (int i = n_invalid; i < 9; i++) {
         arr[i - n_invalid] = p[i];
     }
-    int mdn = n % 2 != 0 ? arr[(n - 1)/2] : (int) round((arr[n/2] + arr[(n/2) - 1])/2.0);
-    free(arr);
+    int mdn = n % 2 != 0 ? arr[(n - 1)/2] : (arr[n/2] + arr[(n/2) - 1] + 1) >> 1;
     return mdn;
 }
 
@@ -88,7 +87,7 @@ static int medianN(int * p, int n_invalid) {
  * --------------------
  * Applies a median filter with a fixed 3x3 kernel with the median determined using a sorting network. For the case of
  * a 3x3 kernel and 256 possible values, this method is generally faster than a histogram based approach. If the kernel
- * contains a fill value, the value at the center will be replace with a fill value.
+ * contains fill values, the median is determined using however many valid values there are in the kernel.
  *
  * args:
  *      int *data: pointer to array containing the data to be filtered
@@ -101,19 +100,15 @@ static int medianN(int * p, int n_invalid) {
 void median_filter(int *data, int *filtered_data, int nbins, int nrows,
                    int *nbins_in_row, int *basebins) {
     int window[9];
-    int row = 0;
-    for (int i = 0; i < nbins; i++) {
-        if (i + 1 == basebins[row] + nbins_in_row[row]) {
-            row++;
-        }
-
-        if (row == 0 || row >= nrows -  1) {
-            filtered_data[i] = FILL_VALUE;
-        } else if ( i + 1 <= basebins[row] ||  i + 1 >= basebins[row + 1] - 1) {
-            filtered_data[i] = FILL_VALUE;
-        } else {
-            int n_invalid = get_window(i + 1, row, 3, data, nbins_in_row, basebins, window);
-            filtered_data[i] =  n_invalid == 0 ? median9(window) : medianN(window, n_invalid);
+    for (int i = 1; i < basebins[0] + nbins_in_row[0]; i++) filtered_data[i - 1] = FILL_VALUE;
+    for (int i = basebins[nrows - 1]; i < basebins[nrows - 1] + nbins_in_row[nrows - 1]; i++) filtered_data[i - 1] = FILL_VALUE;
+    for (int i = 1; i < nrows - 1; i++) {
+        filtered_data[basebins[i] - 1] = FILL_VALUE;
+        filtered_data[basebins[i] + nbins_in_row[i] - 2] = FILL_VALUE;
+        for (int j = basebins[i] + 1; j < basebins[i] + nbins_in_row[i] - 1; j++) {
+            int n_invalid = get_window(j, i, 3, data, nbins_in_row, basebins, window);
+            filtered_data[j - 1] =  n_invalid == 0 ? median9(window) : medianN(window, n_invalid);
         }
     }
+
 }

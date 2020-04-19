@@ -13,7 +13,6 @@ freq/
 kud/
 build/
 test/support
-project.yml
 test/unity.c
 test/unity.h
 test/unity_internals.h
