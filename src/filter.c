@@ -11,7 +11,7 @@
 #define BIN_SWAP(a,b) { int temp=(a);(a)=(b);(b)=temp; }
 
 /*
- * Function:  sort9
+ * Function:  median9
  * --------------------
  * Uses a median network to obtain the median of array of 9 elements.
  *
@@ -77,8 +77,7 @@ static int medianN(int * p, int n_invalid) {
     for (int i = n_invalid; i < 9; i++) {
         arr[i - n_invalid] = p[i];
     }
-    int mdn = n % 2 != 0 ? arr[(n - 1)/2] : (arr[n/2] + arr[(n/2) - 1] + 1) >> 1;
-    return mdn;
+    return n & 1 ? arr[(n - 1) >> 1] : (arr[n >> 1] + arr[(n >> 1) - 1] + 1) >> 1;
 }
 
 /*
@@ -100,6 +99,10 @@ void median_filter(int *data, int *filtered_data, int nbins, int nrows,
                    int *nbins_in_row, int *basebins) {
     int window[9];
     int last_row = nrows - 1;
+    /*
+     * Fill in the first and last row with fill values. Then iterate through the remaining rows while filling the
+     * first and last row with fill values and the rest with the result of the median filter.
+     */
     for (int i = 0; i < basebins[0] + nbins_in_row[0]; i++) filtered_data[i] = FILL_VALUE;
     for (int i = basebins[last_row]; i < basebins[last_row] + nbins_in_row[last_row]; i++) filtered_data[i] = FILL_VALUE;
     for (int i = 1; i < nrows - 1; i++) {
