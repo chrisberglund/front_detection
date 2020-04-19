@@ -40,7 +40,7 @@ void bin2latlon(int bin, int row, const int *nBinsInRow, const double *latrows, 
  *      double *lats: pointer to an output array for latitude values
  *      double *lons: pointer to an output array for longitude values
  *      int *outRows: pointer to an output array for the row number for each bin
- *      int *outBins: pointer to an output array for the bin number for each bin
+ *      int *outBins: pointer to an output array for the bin number for each bin. These bin numbers begin with 0
  *      int nrows: the number of rows in the binning scheme
  *      int *dataBins: pointer to an array containing the bin number for each data containing bin
  *      int nbins: number of bins in the binning scheme
@@ -68,7 +68,7 @@ void getLatLon(double *lats, double *lons, int *outRows, int *outBins, int nrows
         if (row + 1 < nrows && i >= basebins[row + 1]) {
             row++;
         }
-        outBins[i] = i + 1;
+        outBins[i] = i;
         outRows[i] = row;
         bin2latlon(outBins[i], row, nBinsInRow, latrows, basebins, nrows, coords);
         lats[i] = coords->latitude;

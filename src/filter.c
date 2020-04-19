@@ -100,14 +100,15 @@ static int medianN(int * p, int n_invalid) {
 void median_filter(int *data, int *filtered_data, int nbins, int nrows,
                    int *nbins_in_row, int *basebins) {
     int window[9];
-    for (int i = 1; i < basebins[0] + nbins_in_row[0]; i++) filtered_data[i - 1] = FILL_VALUE;
-    for (int i = basebins[nrows - 1]; i < basebins[nrows - 1] + nbins_in_row[nrows - 1]; i++) filtered_data[i - 1] = FILL_VALUE;
+    int last_row = nrows - 1;
+    for (int i = 0; i < basebins[0] + nbins_in_row[0]; i++) filtered_data[i] = FILL_VALUE;
+    for (int i = basebins[last_row]; i < basebins[last_row] + nbins_in_row[last_row]; i++) filtered_data[i] = FILL_VALUE;
     for (int i = 1; i < nrows - 1; i++) {
-        filtered_data[basebins[i] - 1] = FILL_VALUE;
-        filtered_data[basebins[i] + nbins_in_row[i] - 2] = FILL_VALUE;
+        filtered_data[basebins[i]] = FILL_VALUE;
+        filtered_data[basebins[i] + nbins_in_row[i] - 1] = FILL_VALUE;
         for (int j = basebins[i] + 1; j < basebins[i] + nbins_in_row[i] - 1; j++) {
             int n_invalid = get_window(j, i, 3, data, nbins_in_row, basebins, window);
-            filtered_data[j - 1] =  n_invalid == 0 ? median9(window) : medianN(window, n_invalid);
+            filtered_data[j] =  n_invalid == 0 ? median9(window) : medianN(window, n_invalid);
         }
     }
 

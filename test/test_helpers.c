@@ -27,10 +27,10 @@ void test_get_window_no_fill(void)
                     112, 55, 246, 47, 105, 98, 92,
                     114, 88, 29, 193, 180, 24};
     int n_bins_in_row[12] = {6,7,8,9,10,11,11,10,9,8,7,6};
-    int basebins[12] = {1, 7, 14, 22, 31, 41, 52, 63, 73, 82, 90, 97};
+    int basebins[12] = {0, 6, 13, 21, 30, 40, 51, 62, 72, 81, 89, 96};
     int window[9];
     int expected_window[9] = {221,232, 72, 17, 195, 53, 150, 226, 113};
-    int n_invalid = get_window(34, 4, 3, arr, n_bins_in_row, basebins, window);
+    int n_invalid = get_window(33, 4, 3, arr, n_bins_in_row, basebins, window);
     TEST_ASSERT_EQUAL_INT_ARRAY(expected_window, window, 9);
     TEST_ASSERT_EQUAL_INT(0, n_invalid);
 }
@@ -49,10 +49,10 @@ void test_get_window_fill_values(void) {
                     112, 55, 246, 47, 105, 98, 92,
                     114, 88, 29, 193, 180, 24};
     int n_bins_in_row[12] = {6,7,8,9,10,11,11,10,9,8,7,6};
-    int basebins[12] = {1, 7, 14, 22, 31, 41, 52, 63, 73, 82, 90, 97};
+    int basebins[12] = {0, 6, 13, 21, 30, 40, 51, 62, 72, 81, 89, 96};
     int window[9];
     int expected_window[9] = {221,232, 72, FILL_VALUE, 195, 53, 150, 226, FILL_VALUE};
-    int n_invalid = get_window(34, 4, 3, arr, n_bins_in_row, basebins, window);
+    int n_invalid = get_window(33, 4, 3, arr, n_bins_in_row, basebins, window);
     TEST_ASSERT_EQUAL_INT_ARRAY(expected_window, window, 9);
     TEST_ASSERT_EQUAL_INT(2, n_invalid);
 

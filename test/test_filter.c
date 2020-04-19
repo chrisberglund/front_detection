@@ -54,7 +54,7 @@ void test_filter_median_filter_no_fill(void) {
     int nbins_in_row[12] = {12,12,12,12,12,12,12,12,12,12,12,12};
     int basebins[12];
     for (int i = 0; i < 12; i++) {
-        basebins[i] = (i * 12) + 1;
+        basebins[i] = (i * 12);
     }
     int test[1] = {FILL_VALUE};
     int arr_expected[144] = {FILL_VALUE, FILL_VALUE, FILL_VALUE, FILL_VALUE, FILL_VALUE, FILL_VALUE,
@@ -97,7 +97,7 @@ void test_filter_median_filter_yes_fill(void) {
     int nbins_in_row[12] = {12,12,12,12,12,12,12,12,12,12,12,12};
     int basebins[12];
     for (int i = 0; i < 12; i++) {
-        basebins[i] = (i * 12) + 1;
+        basebins[i] = (i * 12);
     }
     int test[1] = {FILL_VALUE};
     int arr_expected[144] = {FILL_VALUE, FILL_VALUE, FILL_VALUE, FILL_VALUE, FILL_VALUE, FILL_VALUE,
