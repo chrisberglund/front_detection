@@ -1,123 +1,73 @@
-/**
- * Histogram analysis
+/*
+ * Functions for the implementation of the histogram analysis step of the single image edge detection algorithm.
  */
-
-#include "histogram.h"
-#include <stdlib.h>
-#include <stdbool.h>
-#include <stdio.h>
 #include <string.h>
-#include <math.h>
-#include "helpers.h"
+#include "histogram.h"
 #include "cayula.h"
 
 
 #define CRIT_VALUE 0.7
 
+static inline double square(double a) {
+    return a * a;
+}
+
+static inline int squarei(int a) {
+    return a * a;
+}
+
 /*
- * 
+ * Function: get_histogram
+ * --------------------
+ * Creates a histogram of the values in the window assuming the window contains integer values ranging from
+ * 0 to 255.
+ *
+ * args:
+ *      int *data: the data contained within the window. Ranges from 0 to 255.
+ *      int *histogram: pointer to a 256 element array for the output of the histogram
  */
-void get_histogram(const int *data, double *histogram, int *count, int n_pixels) {
-    memset(count, 0, 256 * sizeof(int));
-    for (int i = 0; i < 256; i++) {
-        histogram[i] = 0;
-    }
+void get_histogram(const int *data, int *histogram) {
+    memset(histogram, 0, 256 * sizeof(int));
     int nvalid = 0;
-    for (int i = 0; i < n_pixels; i++) {
-        if (data[i] != -999) {
-            count[data[i]]++;
+    int area = squarei(WINDOW_WIDTH);
+    for (int i = 0; i < area; i++) {
+        if (data[i] != FILL_VALUE) {
+            histogram[data[i]]++;
             nvalid++;
         }
     }
-    for (int i = 0; i < 256; i++) {
-        if (nvalid > 0)
-            histogram[i] = (double) count[i] / nvalid;
-        else
-            histogram[i] = 0;
-    }
 }
 
-/**
- * Calculates mean parameter
- * @param histogram pointer to an array of nvalues length
- * @param threshold threshold value
- * @param high whether to calculate mean for the higher value body
- * @param nvalues number of bins in histogram
- * @return mean
+/*
+ * Function:  within_group_variance
+ * --------------------
+ * Calculates the sum of the variance within the groups resulting from segmenting by the given threshold
+ *
+ * args:
+ *      int *histogram: pointer to an array containing the histogram of the window
+ *      double mu_low: mean of the group below the threshold
+ *      double mu_high: mean of the group above the threshold
+ *      int n_low: sum of the histogram of the group below the threshold
+ *      int n_high: sum of the histogram of the group above the threshold
+ *      int tau: the threshold
+ * returns:
+ *      double: the sum of the variance within the groups
  */
-double mean(const double *histogram, int threshold, bool high, int nvalues) {
-    double num = 0, dem = 0;
-    if (high) {
-        for (int i = nvalues - 1; i > threshold; i--) {
-            num += (i + 1) * histogram[i];
-            dem += histogram[i];
-        }
-    } else {
-        for (int i = 0; i < threshold; i++) {
-            num += ((i + 1) * histogram[i]);
-            dem += histogram[i];
-        }
-    }
-    return num / dem;
-}
-
-/**
- * Calculates the variance of the group
- * @param histogram histogram of values of the window
- * @param mu mean of the group
- * @param threshold threshold value
- * @param high whether or not this group is the higher value body or not
- * @param nvalues number of bins in histogram
- * @return group variance
- */
-double groupVariance(const double *histogram, double mu, int threshold, bool high, int nvalues) {
+double within_group_variance(const int *histogram, double mu_low, double mu_high, int n_low, int n_high, int tau) {
     double num = 0;
-    double dem = 0;
-    if (high) {
-        for (int i = threshold; i < 256; i++) {
-            num += pow(i - mu, 2) * histogram[i];
-            dem += histogram[i];
-        }
-        return num / (256 - threshold);
-    } else {
-        for (int i = 0; i < threshold; i++) {
-            num += pow(i - mu, 2) * histogram[i];
-            dem += histogram[i];
-        }
-        return num / dem;
+    for (int i = 0; i < tau; i++) {
+        num += square(i - mu_low) * histogram[i];
     }
+    double s_low = num / n_low;
+    num = 0;
+    for (int i = tau; i < 256; i++) {
+        num += square(i - mu_high) * histogram[i];
+    }
+    double s_high = num / n_high;
+
+    return (s_low * n_low / (n_low + n_high)) + (s_high * n_high / (n_low + n_high));
 }
 
-/**
- * Calculates the within group variance of the two bodies
- * @param histogram histogram of the window
- * @param mulow mean of lower value body
- * @param muhigh mean of higher value body
- * @param nlow N1
- * @param nhigh N2
- * @param threshold threshold
- * @param nvalues number of bins in histogram
- * @return within group variance
- */
-double
-withinGroupVariance(const double *histogram, double mulow, double muhigh, double nlow, double nhigh, int threshold,
-                    int nvalues) {
-    double lowGroup = groupVariance(histogram, mulow, threshold, false, nvalues) * nlow / (nlow + nhigh);
-    double highGroup = groupVariance(histogram, muhigh, threshold, true, nvalues) * nhigh / (nlow + nhigh);
-    return lowGroup * nlow/(nlow + nhigh) + highGroup * nhigh/(nlow + nhigh);
-}
-
-/**
- * Calculates between group variance
- * @param mulow mean of lower value body
- * @param muhigh mean of higher value body
- * @param nlow N1
- * @param nhigh N2
- * @return between group variance
- */
-double betweenGroupVariance(double mulow, double muhigh, double nlow, double nhigh) {
-    return pow((mulow - muhigh), 2) * (nlow * nhigh) / pow((nlow + nhigh), 2);
-}
 
 /*
  * Function:  too_large
@@ -125,16 +75,16 @@ double betweenGroupVariance(double mulow, double muhigh, double nlow, double nhi
  * Check to see if segmenting the window by the given threshold results in too small of a segment.
  *
  * args:
- *      int *count: pointer to an array containing a histogram containing the count of each value in the window
- *      int threshold: the threshold by which to segment the window
+ *      int *histogram: pointer to an array containing a histogram of the values in the window
+ *      int tau: the threshold by which to segment the window
  * returns:
  *      int: 1 if one of the segments is too large and 0 if both segments are of adequate size
  */
-int too_large(const int *count, int threshold) {
+int too_large(const int *histogram, int tau) {
     int sum = 0;
     double area = (double) (WINDOW_WIDTH * WINDOW_WIDTH);
-    for (int i = 0; i < threshold; i++) {
-        sum += count[i];
+    for (int i = 0; i < tau; i++) {
+        sum += histogram[i];
     }
     double ratio = sum / area;
     return (ratio < 0.25 ||  ratio > 0.75);
@@ -153,57 +103,45 @@ int too_large(const int *count, int threshold) {
  *      int: the threshold value that best divides the window
  */
 int histogram_analysis(int *window) {
-    double histogram[256];
-    int count[256];
-    get_histogram(window, histogram, count, WINDOW_WIDTH * WINDOW_WIDTH);
-    int threshold = -1;
-    double n_low = 0;
-    double num_low = 0;
-    double n_high = 0;
-    double nlowMax = 0;
-    double nhighMax = 0;
-    double mu_high = 0;
-    double mu_low_max = 0;
-    double mu_low = 0;
-    double mu_high_max = 0;
-    double num_high = 0;
+    int histogram[256];
+    get_histogram(window, histogram);
+    int n_low = 0, num_low = 0, n_high = 0, num_high = 0;
+
+
     double max_between = 0;
     for (int i = 0; i < 256; i++) {
         n_high += histogram[i];
         num_high += i * histogram[i];
     }
+    int tau = -1;
+    double n_low_max, n_high_max, mu_high, mu_low_max, mu_low, mu_high_max;
 
     for (int i = 0; i  < 254; i++) {
         n_high -= histogram[i];
         num_high -= i * histogram[i];
         n_low += histogram[i];
         num_low += (i) * histogram[i];
-        if (n_low == 0 || n_high == 0) continue;
-        mu_low = num_low / n_low;
-        mu_high = num_high / n_high;
-        double between = betweenGroupVariance(mu_low, mu_high, n_low, n_high);
+        if (n_low != 0 && n_high != 0) {
+            mu_low = (double) num_low / n_low;
+            mu_high = (double) num_high / n_high;
+            double between = (square(mu_low - mu_high) * n_low * n_high) / squarei(n_low + n_high);
 
-        if (between > max_between) {
-            threshold = i + 1;
-            max_between = between;
-            nlowMax = n_low;
-            nhighMax = n_high;
-            mu_low_max = mu_low;
-            mu_high_max = mu_high;
+            if (between > max_between) {
+                tau = i + 1;
+                max_between = between;
+                n_low_max = n_low;
+                n_high_max = n_high;
+                mu_low_max = mu_low;
+                mu_high_max = mu_high;
+            }
         }
 
     }
-
-    if (too_large(count, threshold)) {
-        return -1;
+    double theta = 0;
+    if (!too_large(histogram, tau)) {
+        double within = within_group_variance(histogram, mu_low_max, mu_high_max, n_low_max, n_high_max, tau);
+        theta = max_between / (max_between + within);
     }
 
-    double within = withinGroupVariance(histogram, mu_low_max, mu_high_max, nlowMax, nhighMax, threshold, 256);
-    double theta = max_between / (max_between + within);
-
-    if (theta >= CRIT_VALUE) {
-        return threshold;
-    } else {
-        return -1;
-    }
+    return theta >= CRIT_VALUE ? tau : -1;
 }
