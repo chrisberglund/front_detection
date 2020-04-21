@@ -95,7 +95,6 @@ static int medianN(int * p, int n_invalid) {
  *      int *basebins: pointer to an array containing the bin number of the first bin in each row
  */
 void median_filter(int *data, int *filtered_data, int nbins, int nrows, int *nbins_in_row, int *basebins) {
-    int window[9];
     int last_row = nrows - 1;
     /*
      * Fill in the first and last row with fill values. Then iterate through the remaining rows while filling the
@@ -110,6 +109,7 @@ void median_filter(int *data, int *filtered_data, int nbins, int nrows, int *nbi
             if (data[j] == FILL_VALUE) {
                 filtered_data[j] = FILL_VALUE;
             } else {
+                int window[9];
                 int n_invalid = get_window(j, i, 3, data, nbins_in_row, basebins, window);
                 filtered_data[j] = n_invalid == 0 ? median9(window) : medianN(window, n_invalid);
             }
