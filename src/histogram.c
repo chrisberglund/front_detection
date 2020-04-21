@@ -17,21 +17,21 @@
 /*
  * 
  */
-void get_histogram(const int *data, double *histogram, int n_pixels) {
-    int occurrence[256] = {0};
+void get_histogram(const int *data, double *histogram, int *count, int n_pixels) {
+    memset(count, 0, 256 * sizeof(int));
     for (int i = 0; i < 256; i++) {
         histogram[i] = 0;
     }
     int nvalid = 0;
     for (int i = 0; i < n_pixels; i++) {
         if (data[i] != -999) {
-            occurrence[data[i]]++;
+            count[data[i]]++;
             nvalid++;
         }
     }
     for (int i = 0; i < 256; i++) {
         if (nvalid > 0)
-            histogram[i] = (double) occurrence[i] / nvalid;
+            histogram[i] = (double) count[i] / nvalid;
         else
             histogram[i] = 0;
     }
@@ -119,22 +119,27 @@ double betweenGroupVariance(double mulow, double muhigh, double nlow, double nhi
     return pow((mulow - muhigh), 2) * (nlow * nhigh) / pow((nlow + nhigh), 2);
 }
 
-/**
- * Checks if segmentation results in too large of a segment
+/*
+ * Function:  too_large
+ * --------------------
+ * Check to see if segmenting the window by the given threshold results in too small of a segment.
+ *
+ * args:
+ *      int *count: pointer to an array containing a histogram containing the count of each value in the window
+ *      int threshold: the threshold by which to segment the window
+ * returns:
+ *      int: 1 if one of the segments is too large and 0 if both segments are of adequate size
  */
-bool isTooLarge(const int *window, int width, int threshold) {
-    int *copy = malloc((width * width) * sizeof(int));
-    for (int i = 0; i < (width * width); i++) {
-        copy[i] = window[i];
+int too_large(const int *count, int threshold) {
+    int sum = 0;
+    double area = (double) (WINDOW_WIDTH * WINDOW_WIDTH);
+    for (int i = 0; i < threshold; i++) {
+        sum += count[i];
     }
-    //sort(copy, 0, (width * width) - 1);
-    int i = 0;
-    while (copy[i] < threshold) {
-        i++;
-    }
-    free(copy);
-    return (((double) i / (width * width) < 0.25) || ((double) i / (width * width)) > 0.75);
+    double ratio = sum / area;
+    return (ratio < 0.25 ||  ratio > 0.75);
 }
+
 /*
  * Function:  histogram_analysis
  * --------------------
@@ -149,7 +154,8 @@ bool isTooLarge(const int *window, int width, int threshold) {
  */
 int histogram_analysis(int *window) {
     double histogram[256];
-    get_histogram(window, histogram, WINDOW_WIDTH * WINDOW_WIDTH);
+    int count[256];
+    get_histogram(window, histogram, count, WINDOW_WIDTH * WINDOW_WIDTH);
     int threshold = -1;
     double n_low = 0;
     double num_low = 0;
@@ -169,7 +175,7 @@ int histogram_analysis(int *window) {
 
     for (int i = 0; i  < 254; i++) {
         n_high -= histogram[i];
-        num_high -= (i) * histogram[i];
+        num_high -= i * histogram[i];
         n_low += histogram[i];
         num_low += (i) * histogram[i];
         if (n_low == 0 || n_high == 0) continue;
@@ -187,12 +193,15 @@ int histogram_analysis(int *window) {
         }
 
     }
-    if (isTooLarge(window, WINDOW_WIDTH, threshold))
+
+    if (too_large(count, threshold)) {
         return -1;
+    }
+
     double within = withinGroupVariance(histogram, mu_low_max, mu_high_max, nlowMax, nhighMax, threshold, 256);
     double theta = max_between / (max_between + within);
 
-    if (theta >= CRIT_VALUE && !isTooLarge(window, WINDOW_WIDTH, threshold)) {
+    if (theta >= CRIT_VALUE) {
         return threshold;
     } else {
         return -1;
