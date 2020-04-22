@@ -2,6 +2,7 @@
  * Functions for the implementation of the histogram analysis step of the single image edge detection algorithm.
  */
 #include <string.h>
+#include "helpers.h"
 #include "histogram.h"
 #include "cayula.h"
 

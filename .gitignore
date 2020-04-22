@@ -19,3 +19,4 @@ test/unity_internals.h
 test_filter.out.stackdump
 test_helpers.out.stackdump
 test_histogram.out.stackdump
+test_cohesion.out.stackdump
