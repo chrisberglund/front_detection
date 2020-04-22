@@ -28,12 +28,10 @@ static inline int squarei(int a) {
  */
 void get_histogram(const int *data, int *histogram) {
     memset(histogram, 0, 256 * sizeof(int));
-    int nvalid = 0;
     int area = squarei(WINDOW_WIDTH);
     for (int i = 0; i < area; i++) {
         if (data[i] != FILL_VALUE) {
             histogram[data[i]]++;
-            nvalid++;
         }
     }
 }
@@ -64,7 +62,6 @@ double within_group_variance(const int *histogram, double mu_low, double mu_high
         num += square(i - mu_high) * histogram[i];
     }
     double s_high = num / n_high;
-
     return (s_low * n_low / (n_low + n_high)) + (s_high * n_high / (n_low + n_high));
 }
 
@@ -106,8 +103,6 @@ int histogram_analysis(int *window) {
     int histogram[256];
     get_histogram(window, histogram);
     int n_low = 0, num_low = 0, n_high = 0, num_high = 0;
-
-
     double max_between = 0;
     for (int i = 0; i < 256; i++) {
         n_high += histogram[i];
@@ -142,6 +137,5 @@ int histogram_analysis(int *window) {
         double within = within_group_variance(histogram, mu_low_max, mu_high_max, n_low_max, n_high_max, tau);
         theta = max_between / (max_between + within);
     }
-
     return theta >= CRIT_VALUE ? tau : -1;
 }
