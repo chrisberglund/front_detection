@@ -4,10 +4,16 @@
 #include <stdio.h>
 #include <math.h>
 #include "helpers.h"
+#include "cayula.h"
 
-int mod(int a, int n) {
+static inline double square(double a) {
+    return a * a;
+}
+
+static inline int mod(int a, int n) {
     return a - floor(a / n) * n;
 }
+
 
 const int ANGLES[9] = {135, 90, 45,
                        180, 360, 0,
@@ -27,50 +33,34 @@ struct subnode {
     struct subnode *next;
 };
 
-struct gradientVector{
+struct Vector{
     double x;
     double y;
-};
+} typedef Vector;
 
-void replaceFillValue(int *window, int fillValue) {
-    int counter = 0;
-    for (int i = 0; i < 9; i++) {
-        if (window[i] == fillValue) {
-            counter++;
-        }
-    }
-    if (counter > 0) {
-        int *validValues = (int *) malloc(sizeof(int) * 9 - counter);
-        int validCount = 0;
-        for (int i = 0; i < 9; i++) {
-            if (window[i] != fillValue) {
-                validValues[validCount] = window[i];
-                validCount++;
-            }
-        }
-        int mdn = 4;//median(validValues, 9 - counter);
-        free(validValues);
-        for (int i = 0; i < 9; i++) {
-            if (window[i] == fillValue) {
-                window[i] = mdn;
-            }
-        }
-    }
-}
-
-/**
- * Calculates the gradient for the center of a 3x3 window
- * @param window pointer to an array of length 9 containing data values representing a 3x3 window
- * @return structure containing the direction and magnitude of the gradient
+/*
+ * Function:  gradient
+ * --------------------
+ * Calculates the gradient of the center pixel in the provided array using first order central differences. Fill values
+ * at pixels within the directional step of the gradient calculation are replaced with the center pixel value.
+ *
+ * args:
+ *      int *window: pointer to an array of 9 elements representing a window of data values from which to calculate
+ *      the gradient of the center pixel
+ *
+ * returns:
+ *      Vector: the vector gradient
  */
-struct gradientVector gradient(int *window, int fillValue) {
-    replaceFillValue(window, fillValue);
-    struct gradientVector g;
+Vector gradient(int *window) {
+    if (window[5] == FILL_VALUE) window[5] = window[4];
+    if (window[3] == FILL_VALUE) window[3] = window[4];
+    if (window[7] == FILL_VALUE) window[7] = window[4];
+    if (window[1] == FILL_VALUE) window[1] = window[4];
+    Vector g;
     g.x = (double) (window[5] - window[3]) / 2;
     g.y = (double) (window[7] - window[1]) / 2;
     return g;
 }
-
 /**
  * Calculates if the angle of the next turn represents a greater than 90 degrees turn over the course of the
  * previous 3 contour pixels
@@ -96,34 +86,42 @@ bool isSharpTurn(struct subnode *tail, int nextTheta) {
     return false;
 }
 
-/**
- * Calculates the ratio between the magnitude of the sum of the gradients and the sum of the magnitude of the gradients.
- * Takes a 5x5 window of values and calculates the gradient for each pixel in the 3x3 window in the center of the larger
- * window, and calculates the ratio.
- * @param window a 5x5 window containing the data for which the gradient is to be calculated
- * @param fillValue value that is used in place of missing or invalid values
- * @return the ratio between the magnitude of the sum of the gradients and the sum of the magnitude of the gradients
+/*
+ * Function:  get_gradient_ratio
+ * --------------------
+ * Calculates the ratio between the magnitude of the gradient sum and the sum of magnitude of the gradient of the pixels
+ * in a 3x3 window centered on the center pixel of the provided 5x5 window. The gradient is calculated with
+ * first order central differences.
+ *
+ * args:
+ *      int *window: pointer to an array 25 elements long representing a 5x5 window centered on the last contour pixel
+ *
+ * returns:
+ *      int: the ratio between the magnitude of the sum of the gradient vectors and the sum of the magnitude of the
+ *      gradient vectors for each pixel in a 3x3 window centered on the center pixel of the provided window.
  */
-double getGradientRatio(const int *window, int fillValue) {
-    double sumMagnitude = 0;
-    double sumX = 0;
-    double sumY = 0;
-    for (int i = 1; i < 4; i++) {
-        for (int j = 1; j < 4; j++) {
-            int *dataWindow = malloc(9 * sizeof(int));
-            for (int k = 0; k < 3; k++) {
-                for (int m = 0; m < 3; m++) {
-                    dataWindow[k * 3 + m] = window[(i - 1 + k) * 3 + (j - 1 + m)];
-                }
-            }
-            struct gradientVector g = gradient(dataWindow, fillValue);
-            sumMagnitude += sqrt(pow(g.x, 2) + pow(g.y, 2));
-            sumX += g.x;
-            sumY += g.y;
-            free(dataWindow);
+double gradient_ratio(const int *window, int fillValue) {
+    double sum_magnitude = 0, sum_x = 0, sum_y = 0;
+    for (int i = -1; i < 2; i++) {
+        for (int j = -1; j < 2; j++) {
+            int inner_window[9];
+            inner_window[0] = window[i * 5 + 6 + j];
+            inner_window[1] = window[i * 5 + 7 + j];
+            inner_window[2] = window[i * 5 + 8 + j];
+            inner_window[3] = window[i * 5 + 11 + j];
+            inner_window[4] = window[i * 5 + 12 + j];
+            inner_window[5] = window[i * 5 + 13 + j];
+            inner_window[6] = window[i * 5 + 16 + j];
+            inner_window[7] = window[i * 5 + 17 + j];
+            inner_window[9] = window[i * 5 + 18 + j];
+
+            Vector g = gradient(inner_window);
+            sum_magnitude += sqrt(square(g.x) + square(g.y));
+            sum_x += g.x;
+            sum_y += g.y;
         }
     }
-    return sqrt(pow(sumX, 2) + pow(sumY, 2)) / sumMagnitude;
+    return sqrt(square(sum_x) + square(sum_y)) / sum_magnitude;
 }
 
 /**

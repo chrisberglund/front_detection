@@ -7,7 +7,6 @@
 #include "helpers.h"
 #include "cayula.h"
 
-
 int findClosestValue(int arr[], int l, int r, int x) {
     int mid = l + (r - l) / 2;
     if (r >= l) {
