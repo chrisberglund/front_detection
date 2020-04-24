@@ -20,3 +20,4 @@ test_filter.out.stackdump
 test_helpers.out.stackdump
 test_histogram.out.stackdump
 test_cohesion.out.stackdump
+test_contour.out.stackdump

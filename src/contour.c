@@ -1,5 +1,6 @@
 #include "contour.h"
 #include <stdlib.h>
+#include <string.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <math.h>
@@ -19,21 +20,14 @@ const int ANGLES[9] = {135, 90, 45,
                        180, 360, 0,
                        225, 270, 315};
 
-struct node {
-    struct subnode *child;
-    struct node *prev;
-    struct node *next;
+struct contour {
+    struct contour_point *first_point;
+    struct contour *prev;
+    struct contour *next;
     int length;
-};
+} typedef Contour;
 
-struct subnode {
-    int bin;
-    int entryAngle;
-    struct subnode *prev;
-    struct subnode *next;
-};
-
-struct Vector{
+struct vector{
     double x;
     double y;
 } typedef Vector;
@@ -61,29 +55,33 @@ Vector gradient(int *window) {
     g.y = (double) (window[7] - window[1]) / 2;
     return g;
 }
-/**
- * Calculates if the angle of the next turn represents a greater than 90 degrees turn over the course of the
- * previous 3 contour pixels
- * @param tail the node in the linked list representing the most recent pixel in the contour
- * @param nextTheta the angle between the last pixel and the next pixel in question
- * @return 1 if the change in direction is greather than 90, 0 if otherwise
+
+/*
+ * Function:  turn_too_sharp
+ * --------------------
+ * Checks to see if adding a point at the provided angle would result in the contour changing direction by more than 90
+ * degrees over the course of 5 pixels.
+ *
+ * args:
+ *      ContourPoint *tail: the last point currently on the contour
+ *      int next_theta: the angle between the last point on the contour and the point to be added
+ *
+ * returns:
+ *      int: 1 if change in direction exceeds 90 degrees, 0 if it does not
  */
-bool isSharpTurn(struct subnode *tail, int nextTheta) {
+int turn_too_sharp(ContourPoint *tail, int next_theta) {
     int counter = 0;
-    int dtheta = 0;
-    struct subnode *tmp = tail;
-    int prevTheta = 0;
-    while (tail->prev != NULL && counter < 3) {
-        prevTheta = tmp->entryAngle;
-        dtheta = tmp->entryAngle - nextTheta;
-        dtheta = mod(dtheta + 180, 360) - 180;
+    ContourPoint *tmp = tail;
+    while (tmp->prev->prev != NULL && counter < 5) {
+        int dtheta = mod(tmp->angle - next_theta + 180, 360) - 180;
         dtheta = dtheta < -180 ? dtheta + 360 : dtheta;
         dtheta = abs(dtheta);
-        if (dtheta > 90)
-            return true;
+        if (dtheta > 90) return 1;
+        tmp = tmp->prev;
         counter++;
+
     }
-    return false;
+    return 0;
 }
 
 /*
@@ -138,9 +136,10 @@ double gradient_ratio(const int *window, int fillValue) {
  * @param tail
  * @return
  */
-int followContour(int bin, int row, int *bins, const int *inData, const int *filteredData, bool *isInContour,
+ /*
+int followContour2(int bin, int row, int *bins, const int *inData, const int *filteredData, bool *isInContour,
                   const int *nBinsInRow, const int *basebins, int fillValue, struct subnode *tail) {
-    /*
+
     int count = 1;
     int nextContourPixel = -1;
     int minDTheta = 180;
@@ -232,10 +231,162 @@ int followContour(int bin, int row, int *bins, const int *inData, const int *fil
                                fillValue, tmp);
     }
 
-    return count;*/
+    return count;
     return 0;
+}*/
+
+ Contour *new_contour(Contour *prev, int bin) {
+     Contour *n = malloc(sizeof(Contour));
+     n->prev = prev;
+     n->next = NULL;
+     n->length = 1;
+     ContourPoint *c = malloc(sizeof(ContourPoint));
+     c->bin = bin;
+     c->prev = NULL;
+     c->next = NULL;
+     n->first_point = c;
+     return n;
+ }
+
+/*
+* Function:  del_contour
+* --------------------
+* Deletes the provided node in the linked list of contours and all the contour point nodes that belongs to it. If
+* the node is the middle of the linked list, the nodes before and after are linked to each other.
+*
+* args:
+*      Contour *n: the node of the linked list to delete
+*
+*/
+void del_contour(Contour *n) {
+    ContourPoint *c = n->first_point;
+    while (c->next != NULL) c = c->next;
+    while (c->prev != NULL) {
+        ContourPoint *tmp = c->prev;
+        free(c);
+        c = tmp;
+    }
+    if (n->prev != NULL) {
+        if (n->next != NULL) {
+            n->prev->next = n->next;
+        } else {
+            n->prev = NULL;
+        }
+    }
+    free(n);
 }
 
+/*
+ * Function:  new_contour_point
+ * --------------------
+ * Creates a new contour point and adds it to the end of the doubly linked list representing a single contour.
+ *
+ * args:
+ *      ContourPoint *prev: the last node in the contour linked list
+ *      int bin: the bin number of the new point to add to the list
+ *      int angle: the angle between the last point in the contour and the new point
+ *
+ * returns:
+ *      ContourPoint *: the new point that is now the last node in the linked list
+ */
+ContourPoint * new_contour_point(ContourPoint *prev, int bin, int angle) {
+    ContourPoint *c = malloc(sizeof(ContourPoint));
+    prev->next = c;
+    c->bin = bin;
+    c->angle = angle;
+    c->prev = prev;
+    c->next = NULL;
+    return c;
+}
+
+/*
+ * Function:  find_best_front
+ * --------------------
+ * Of the bins neighboring the last bin on the contour, this function selects the best front bin to add to the contour.
+ * Going through all the neighboring bins, the function identifies the next bin that will change the direction of the
+ * contour the least. However, if adding the selected bin would result in the contour changing direction by more than
+ * 90 degrees over the course of 5 bins, the bin is rejected as a possible addition to the contour. If the provided
+ * contour point is the first point in the contour and thus has no direction, the selection is biased towards higher
+ * numbered bins as they are the least likely to be contained in other contours.
+ *
+ * args:
+ *      ContourPoint *prev: the last edge pixel in the current contour
+ *      int *data: pointer to a boolean array representing the pixels status as an edge pixel
+ *      int row: the row of the last edge pixel in the current contour
+ *      int *basebins: pointer to an array containing the index of the first bin of each row
+ *      int *nbins_in_row: pointer to an array containing the number of bins in each row
+ *
+ * returns:
+ *      ContourPoint *: the selected point to add to the contour. Pointer will be NULL if there is no previously
+ *      identified edge pixel to add to the contour.
+ */
+ContourPoint * find_best_front(ContourPoint *prev, const int *data,  int row, const int *basebins, const int *nbins_in_row) {
+    int edge_window[9];
+    get_window(prev->bin, row, 3, data, nbins_in_row, basebins, edge_window);
+    int next_bin = -1;
+    int min_dtheta = 180;
+    int next_angle;
+    for (int i = 0; i < 9; i++) {
+        int dtheta = 180;
+        if (i != 4 && edge_window[i]) {
+            if (prev->prev == NULL) {
+                dtheta = 0;
+            } else {
+                dtheta = prev->angle - ANGLES[i];
+                dtheta = mod(dtheta + 180, 360) - 180;
+                dtheta = dtheta < -180 ? dtheta + 360 : dtheta;
+                dtheta = abs(dtheta);
+            }
+            if (dtheta == 0 || dtheta < min_dtheta) {
+                min_dtheta = dtheta;
+                next_angle = ANGLES[i];
+                double ratio;
+                switch(i) {
+                    case 0:
+                        ratio = (prev->bin - basebins[row]) / (double) nbins_in_row[row];
+                        next_bin = (int) (ratio * nbins_in_row[row - 1] + 0.5)  + basebins[row - 1] - 1;
+                        break;
+                    case 1:
+                        ratio = (prev->bin - basebins[row]) / (double) nbins_in_row[row];
+                        next_bin = (int) (ratio * nbins_in_row[row - 1] + 0.5)  + basebins[row - 1];
+                        break;
+                    case 2:
+                        ratio = (prev->bin - basebins[row]) / (double) nbins_in_row[row];
+                        next_bin = (int) (ratio * nbins_in_row[row - 1] + 0.5)  + basebins[row - 1] + 1;
+                        break;
+                    case 3:
+                        next_bin = prev->bin - 1;
+                        break;
+                    case 5:
+                        next_bin = prev->bin + 1;
+                    case 6:
+                        ratio = (prev->bin - basebins[row]) / (double) nbins_in_row[row];
+                        next_bin = (int) (ratio * nbins_in_row[row + 1] + 0.5)  + basebins[row + 1] - 1;
+                        break;
+                    case 7:
+                        ratio = (prev->bin - basebins[row]) / (double) nbins_in_row[row];
+                        next_bin = (int) (ratio * nbins_in_row[row + 1] + 0.5)  + basebins[row + 1];
+                        break;
+                    case 8:
+                        ratio = (prev->bin - basebins[row]) / (double) nbins_in_row[row];
+                        next_bin = (int) (ratio * nbins_in_row[row + 1] + 0.5)  + basebins[row + 1] + 1;
+                        break;
+                }
+            }
+        }
+    }
+
+    if (next_bin != -1 && (prev->prev == NULL || !turn_too_sharp(prev, next_angle))) {
+        return new_contour_point(prev, next_bin, next_angle);
+    } else {
+        return NULL;
+    }
+}
+
+int follow_contour(ContourPoint prev, const int *data, const int *filtered_data, int *pixel_in_contour, int row, const int *basebins, const int *nbins_in_row) {
+    //ContourPoint *next_point = find_best_front(prev, data, row, basebins,nbins_in_row);
+}
+/*
 void clearSubList(struct node *head) {
     struct subnode *subhead = head->child;
     struct subnode *tmp = NULL;
@@ -245,8 +396,8 @@ void clearSubList(struct node *head) {
         free(subhead);
         subhead = tmp;
     }
-}
-
+}*/
+/*
 void trim(struct node *head) {
     struct node *current = head;
     struct node *next;
@@ -273,6 +424,30 @@ void trim(struct node *head) {
         }
     }
 }
+*/
+
+
+void contour(int *data, int *filtered_data, int nbins, int nrows, const int *nbins_in_row, const int *basebins) {
+    int *pixel_in_contour = malloc(sizeof(int) * nbins);
+    memset(pixel_in_contour, 0, nbins * sizeof(int));
+    Contour *contours = NULL;
+    for (int i = 0; i < nrows; i++) {
+        for (int j = basebins[i]; j < basebins[i] + nbins_in_row[i]; j++) {
+            if (data[j] && !pixel_in_contour[j]) {
+                pixel_in_contour[j] = 1;
+                if (contours == NULL) {
+                    contours = new_contour(NULL, j);
+                } else {
+                    contours->next = new_contour(contours, j);
+                    contours = contours->next;
+                }
+
+                //TODO Grow contour
+            }
+        }
+    }
+    //TODO Kill the contours that are too short
+}
 
 /**
  * Implements a contour following algorithm. Goes through each bin, and if the bin has been previously detected as
@@ -286,7 +461,8 @@ void trim(struct node *head) {
  * @param basebins
  * @param fillValue
  */
-void contour(int *bins, int *inData, int *filteredData, int *outData, int ndata, int nrows, const int *nBinsInRow,
+ /*
+void contour2(int *bins, int *inData, int *filteredData, int *outData, int ndata, int nrows, const int *nBinsInRow,
              const int *basebins, int fillValue) {
     int row = 0;
     struct node *head = NULL;
@@ -348,4 +524,4 @@ void contour(int *bins, int *inData, int *filteredData, int *outData, int ndata,
         free(current);
         current = tmp;
     }
-}
+}*/
