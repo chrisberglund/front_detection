@@ -99,7 +99,7 @@ int neighbor_is_different(const int *window, int row, int col) {
  * Implementation of the window-level processing portion of the "Location of Edge Pixels" step of the algorithm.
  * This function looks for any pixel that has a neighbor that is on the opposite side of the threshold from itself.
  * If a pixel has a different neighbor, it is designated as an edge pixel. Any pixels containing a fill value are
- * ignored and the fill value is passed on to the output array.
+ * ignored and is set to 0.
  *
  * args:
  *      int *window: pointer to an array containing the data window to perform the detection on. Should be of
@@ -120,7 +120,7 @@ void find_edge(const int *window, int *out, int threshold) {
             if (bodies[i * WINDOW_WIDTH + j] != FILL_VALUE) {
                 out[i * WINDOW_WIDTH + j] = neighbor_is_different(bodies, i, j);
             } else {
-                out[i * WINDOW_WIDTH + j] = FILL_VALUE;
+                out[i * WINDOW_WIDTH + j] = 0;
             }
         }
     }
