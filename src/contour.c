@@ -338,9 +338,7 @@ int follow_contour(ContourPoint *prev, const int *data, const int *filtered_data
             }
         }
     }
-    const int ANGLES[9] = {135, 90, 45,
-                           180, 360, 0,
-                           225, 270, 315};
+
     if (next_point != NULL && !pixel_in_contour[next_point->bin]) {
         int next_row;
         pixel_in_contour[next_point->bin] = 1;
@@ -357,6 +355,7 @@ int follow_contour(ContourPoint *prev, const int *data, const int *filtered_data
                 break;
             default:
                 next_row = row;
+                break;
         }
         count += follow_contour(next_point, data, filtered_data, pixel_in_contour, next_row, basebins, nbins_in_row);
     }
