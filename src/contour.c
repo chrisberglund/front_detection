@@ -32,6 +32,10 @@ struct vector{
     double y;
 } typedef Vector;
 
+
+static inline int dot(Vector a, Vector b) {
+    return a.x * b.x + a.y * b.y;
+}
 /*
  * Function:  gradient
  * --------------------
@@ -98,7 +102,7 @@ int turn_too_sharp(ContourPoint *tail, int next_theta) {
  *      int: the ratio between the magnitude of the sum of the gradient vectors and the sum of the magnitude of the
  *      gradient vectors for each pixel in a 3x3 window centered on the center pixel of the provided window.
  */
-double gradient_ratio(const int *window, int fillValue) {
+double gradient_ratio(const int *window) {
     double sum_magnitude = 0, sum_x = 0, sum_y = 0;
     for (int i = -1; i < 2; i++) {
         for (int j = -1; j < 2; j++) {
@@ -121,119 +125,6 @@ double gradient_ratio(const int *window, int fillValue) {
     }
     return sqrt(square(sum_x) + square(sum_y)) / sum_magnitude;
 }
-
-/**
- * Adds the next pixel to the end of the provided contour
- * @param bin
- * @param row
- * @param bins
- * @param inData
- * @param filteredData
- * @param isInContour
- * @param nBinsInRow
- * @param basebins
- * @param fillValue
- * @param tail
- * @return
- */
- /*
-int followContour2(int bin, int row, int *bins, const int *inData, const int *filteredData, bool *isInContour,
-                  const int *nBinsInRow, const int *basebins, int fillValue, struct subnode *tail) {
-
-    int count = 1;
-    int nextContourPixel = -1;
-    int minDTheta = 180;
-    int nextAngle = 0;
-    int dtheta = 0;
-    int *binWindow = malloc(9 * sizeof(int));
-    get_window(bin, row, 3, bins, nBinsInRow, basebins, binWindow, fillValue, false);
-    for (int i = 0; i < 9; i++) {
-        if (i == 4)
-            continue;
-        if (inData[binWindow[i] - 1] > 0) {
-            if (tail->entryAngle == -999) {
-                dtheta = 0;
-            } else {
-                dtheta = tail->entryAngle - ANGLES[i];
-                dtheta = mod(dtheta + 180, 360) - 180;
-                dtheta = dtheta < -180 ? dtheta + 360 : dtheta;
-                dtheta = abs(dtheta);
-            }
-            if (dtheta < minDTheta) {
-                minDTheta = dtheta;
-                nextAngle = ANGLES[i];
-                nextContourPixel = binWindow[i];
-            }
-        }
-    }
-    if (isSharpTurn(tail, nextAngle)) {
-        nextContourPixel = -1;
-    }
-    double ratio = 0;
-
-    if (nextContourPixel == -1) {
-        int *dataWindow = malloc(25 * sizeof(int));
-        get_window(bin, row, 5, filteredData, nBinsInRow, basebins, dataWindow, fillValue, false);
-        ratio = getGradientRatio(dataWindow, fillValue);
-        free(dataWindow);
-        if (ratio > 0.7) {
-            double maxProduct = -1;
-            double product;
-            struct gradientVector gradient1;
-            int maxIndex = -1;
-            int *smallWindow = malloc(9 * sizeof(int));
-            get_window(bin, row, 3, filteredData, nBinsInRow, basebins, smallWindow, fillValue, false);
-            struct gradientVector gradient0 = gradient(smallWindow, fillValue);
-            for (int i = 0; i < 3; i++) {
-                for (int j = 0; j < 3; j++) {
-                    if (i == 1 && j == 1) {
-                        continue;
-                    }
-                    get_window(binWindow[i * 3 + j], row + j - 1, 3, filteredData,
-                               nBinsInRow, basebins, smallWindow, fillValue, false);
-                    gradient1 = gradient(smallWindow, fillValue);
-                    product = (gradient0.x * gradient1.x) + (gradient0.y * gradient1.y);
-                    if (product > maxProduct) {
-                        maxProduct = product;
-                        maxIndex = i * 3 + j;
-                    }
-                }
-            }
-            if (maxProduct > 0) {
-                nextAngle = ANGLES[maxIndex];
-                nextContourPixel = binWindow[maxIndex];
-            }
-            free(smallWindow);
-        }
-    }
-
-    free(binWindow);
-    int nextRow;
-    if (nextAngle == 0 || nextAngle == 180) {
-        nextRow = row;
-    } else if (nextAngle > 0 && nextAngle < 180) {
-        nextRow = row - 1;
-    } else if (nextAngle > 180) {
-        nextRow = row + 1;
-    } else {
-        nextRow = row;
-    }
-
-    if (nextContourPixel != -1 && !isInContour[nextContourPixel - 1]) {
-        isInContour[nextContourPixel - 1] = true;
-        struct subnode *tmp = malloc(sizeof(struct subnode));
-        tail->next = tmp;
-        tmp->prev = tail;
-        tmp->entryAngle = nextAngle;
-        tmp->bin = nextContourPixel;
-        tmp->next = NULL;
-        count += followContour(nextContourPixel, nextRow, bins, inData, filteredData, isInContour, nBinsInRow, basebins,
-                               fillValue, tmp);
-    }
-
-    return count;
-    return 0;
-}*/
 
  Contour *new_contour(Contour *prev, int bin) {
      Contour *n = malloc(sizeof(Contour));
@@ -300,6 +191,57 @@ ContourPoint * new_contour_point(ContourPoint *prev, int bin, int angle) {
 }
 
 /*
+ * Function:  get_bin_number
+ * --------------------
+ * Returns a bin number provided the index of a 9 element array representing a 3x3 window centered on the given bin
+ * number.
+ *
+ * args:
+ *      int bin: the center bin number in the window of interest
+ *      int i: the index for the desired bin in the window of interest
+ *      int row: the row number of the center bin
+ *      int *basebins: pointer to an array containing the bin number for the first bin of each row
+ *      int *nbins_in_row: pointer to an array containing the number of bins in each row
+ *
+ * returns:
+ *      int: bin number of the desired bin
+ */
+static int get_bin_number(int bin, int i, int row, int *basebins, int *nbins_in_row) {
+    double ratio;
+    switch(i) {
+        case 0:
+            ratio = (bin - basebins[row]) / (double) nbins_in_row[row];
+            next_bin = (int) (ratio * nbins_in_row[row - 1] + 0.5)  + basebins[row - 1] - 1;
+            break;
+        case 1:
+            ratio = (bin - basebins[row]) / (double) nbins_in_row[row];
+            next_bin = (int) (ratio * nbins_in_row[row - 1] + 0.5)  + basebins[row - 1];
+            break;
+        case 2:
+            ratio = (bin - basebins[row]) / (double) nbins_in_row[row];
+            next_bin = (int) (ratio * nbins_in_row[row - 1] + 0.5)  + basebins[row - 1] + 1;
+            break;
+        case 3:
+            next_bin = prev->bin - 1;
+            break;
+        case 5:
+            next_bin = prev->bin + 1;
+        case 6:
+            ratio = (bin - basebins[row]) / (double) nbins_in_row[row];
+            next_bin = (int) (ratio * nbins_in_row[row + 1] + 0.5)  + basebins[row + 1] - 1;
+            break;
+        case 7:
+            ratio = (bin - basebins[row]) / (double) nbins_in_row[row];
+            next_bin = (int) (ratio * nbins_in_row[row + 1] + 0.5)  + basebins[row + 1];
+            break;
+        case 8:
+            ratio = (bin - basebins[row]) / (double) nbins_in_row[row];
+            next_bin = (int) (ratio * nbins_in_row[row + 1] + 0.5)  + basebins[row + 1] + 1;
+            break;
+    }
+}
+
+/*
  * Function:  find_best_front
  * --------------------
  * Of the bins neighboring the last bin on the contour, this function selects the best front bin to add to the contour.
@@ -340,38 +282,7 @@ ContourPoint * find_best_front(ContourPoint *prev, const int *data,  int row, co
             if (dtheta == 0 || dtheta < min_dtheta) {
                 min_dtheta = dtheta;
                 next_angle = ANGLES[i];
-                double ratio;
-                switch(i) {
-                    case 0:
-                        ratio = (prev->bin - basebins[row]) / (double) nbins_in_row[row];
-                        next_bin = (int) (ratio * nbins_in_row[row - 1] + 0.5)  + basebins[row - 1] - 1;
-                        break;
-                    case 1:
-                        ratio = (prev->bin - basebins[row]) / (double) nbins_in_row[row];
-                        next_bin = (int) (ratio * nbins_in_row[row - 1] + 0.5)  + basebins[row - 1];
-                        break;
-                    case 2:
-                        ratio = (prev->bin - basebins[row]) / (double) nbins_in_row[row];
-                        next_bin = (int) (ratio * nbins_in_row[row - 1] + 0.5)  + basebins[row - 1] + 1;
-                        break;
-                    case 3:
-                        next_bin = prev->bin - 1;
-                        break;
-                    case 5:
-                        next_bin = prev->bin + 1;
-                    case 6:
-                        ratio = (prev->bin - basebins[row]) / (double) nbins_in_row[row];
-                        next_bin = (int) (ratio * nbins_in_row[row + 1] + 0.5)  + basebins[row + 1] - 1;
-                        break;
-                    case 7:
-                        ratio = (prev->bin - basebins[row]) / (double) nbins_in_row[row];
-                        next_bin = (int) (ratio * nbins_in_row[row + 1] + 0.5)  + basebins[row + 1];
-                        break;
-                    case 8:
-                        ratio = (prev->bin - basebins[row]) / (double) nbins_in_row[row];
-                        next_bin = (int) (ratio * nbins_in_row[row + 1] + 0.5)  + basebins[row + 1] + 1;
-                        break;
-                }
+                next_bin = get_bin_number(prev->bin, i, row, basebins, nbins_in_row);
             }
         }
     }
@@ -384,7 +295,67 @@ ContourPoint * find_best_front(ContourPoint *prev, const int *data,  int row, co
 }
 
 int follow_contour(ContourPoint prev, const int *data, const int *filtered_data, int *pixel_in_contour, int row, const int *basebins, const int *nbins_in_row) {
-    //ContourPoint *next_point = find_best_front(prev, data, row, basebins,nbins_in_row);
+    ContourPoint *next_point;
+    next_point = find_best_front(prev, data, row, basebins,nbins_in_row);
+
+    double ratio = 0;
+
+    if (next_point == NULL) {
+        int outer_window[25];
+        get_window(prev->bin, row, 5, filtered_data, nbins_in_row, basebins, outer_window);
+        double ratio = gradient_ratio(outer_window);
+        if (ratio > 0.7) {
+            double max_product = -1;
+            Vector v;
+            int max_idx = -1;
+            get_window(bin, row, 3, filteredData, nBinsInRow, basebins, smallWindow, fillValue, false);
+            struct gradientVector gradient0 = gradient(smallWindow, fillValue);
+            for (int i = 0; i < 3; i++) {
+                for (int j = 0; j < 3; j++) {
+                    if (i != 1 && j != 1) {
+                        int bin_window[9];
+                        int bin = get_bin_number(prev->bin, i * 3 + j, row,basebins, nbins_in_row);
+                        get_window(bin, row + j - 1, 3, filtered_data,
+                                   nbins_in_row, basebins, bin_window);
+                        gradient1 = gradient(bin_window, fillValue);
+                        double product = dot(gradient0, gradient1);
+                        if (product > maxProduct) {
+                            max_product = product;
+                            max_idx = i * 3 + j;
+                        }
+                    }
+
+                }
+            }
+            if (maxProduct > 0) {
+                next_point = new_contour_point(prev, bin, ANGLES[max_idx]);
+            }
+        }
+    }
+    const int ANGLES[9] = {135, 90, 45,
+                           180, 360, 0,
+                           225, 270, 315};
+    if (next_point != NULL && !pixel_in_contour[next_point->bin]) {
+        int next_row;
+        pixel_in_contour[next_point->bin] = 1;
+        switch(next_point->angle) {
+            case 0:
+            case 180:
+                next_row = row;
+                break;
+            case 1 ... 179:
+                next_row = row - 1;
+                break;
+            case 181 ... 359:
+                next_row = row + 1;
+                break;
+            default:
+                next_row = row;
+        }
+        count += follow_contour(next_point, data, filtered_data, pixel_in_contour, next_row, basebins, nbins_in_row);
+    }
+
+    return count;
 }
 /*
 void clearSubList(struct node *head) {
