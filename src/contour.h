@@ -9,4 +9,5 @@ typedef struct contour_point {
 double gradient_ratio(const int *window);
 ContourPoint * new_contour_point(ContourPoint *prev, int bin, int angle);
 ContourPoint * find_best_front(ContourPoint *prev, const int *data,  int row, const int *basebins, const int *nbins_in_row);
+int follow_contour(ContourPoint *prev, const int *data, const int *filtered_data, int *pixel_in_contour, int row, int nrows, const int *basebins, const int *nbins_in_row);
 #endif //SIED_CONTOUR_H

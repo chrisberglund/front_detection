@@ -16,7 +16,7 @@ void test_contour_gradient_ratio(void) {
                     195,  58,  21, 204, 215,
                     118,  84, 154,  22, 211,
                     113,  64, 126,  97, 235};
-    TEST_ASSERT_EQUAL_DOUBLE(0.3690171758724715, gradient_ratio(arr, -999));
+    TEST_ASSERT_EQUAL_DOUBLE(0.3690171758724715, gradient_ratio(arr));
 }
 
 void test_contour_new_contour_point(void) {
@@ -48,7 +48,6 @@ void test_contour_find_best_front(void) {
         basebins[i] = i * 9;
         nbins_in_row[i] = 9;
     }
-    ContourPoint point1 = {13, 0, NULL, NULL};
     ContourPoint point = {13, 1, NULL, NULL};
     ContourPoint *point2 = find_best_front(&point, data, 1, basebins, nbins_in_row);
 
@@ -79,7 +78,54 @@ void test_contour_find_best_front(void) {
     }
 }
 
+void test_contour_follow_contour(void) {
+    int data[81] = {
+            0, 0, 0, 0, 1, 0, 0, 0, 0,
+            0, 0, 0, 0, 1, 0, 0, 0, 0,
+            0, 0, 1, 0, 1, 0, 0, 0, 0,
+            0, 0, 1, 0, 1, 0, 0, 0, 0,
+            0, 0, 1, 1, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 1, 0, 0, 0, 0,
+            0, 0, 0, 0, 1, 0, 0, 0, 0,
+            0, 0, 0, 0, 1, 0, 0, 0, 0
+    };
+    int basebins[9];
+    int nbins_in_row[9];
+    for (int i = 0; i < 9; i++) {
+        basebins[i] = i * 9;
+        nbins_in_row[i] = 9;
+    }
+    int filtered_data[81] = {
+            100, 100, 100, 100, 100, 100, 100, 100, 100,
+            100, 45, 100, 100, 100, 100, 100, 100, 100,
+            30,  90,  200, 200, 200, 100, 100, 100, 100,
+            30,  90,  200, 200, 200, 100, 100, 100, 100,
+            30,  90, 126, 200, 200, 100, 100, 100, 100,
+            90, 90, 100, 200, 200, 100, 100, 100, 100,
+            100, 100, 100, 200, 200, 100, 100, 100, 100,
+            100, 100, 100, 100, 100, 100, 100, 100, 100,
+            100, 100, 100, 100, 100, 100, 100, 100, 100
+    };
+    int pixel_in_contour[81] = { 0 };
+    pixel_in_contour[13] = 1;
+    ContourPoint point = {13, 1, NULL, NULL};
+    int count = follow_contour(&point, data, filtered_data, pixel_in_contour, 1, 9, basebins, nbins_in_row);
 
+    ContourPoint *pt = point.next;
+    ContourPoint *tmp;
+    int c = 0;
+    while (tmp->next != NULL) {
+        tmp = pt->next;
+        free(pt);
+        pt = tmp;
+        c++;
+    }
+    TEST_ASSERT_EQUAL_INT(6, count);
+    TEST_ASSERT_EQUAL_INT(1, pixel_in_contour[28]);
+    TEST_ASSERT_EQUAL_INT(28, pt->bin);
+    free(pt);
+}
 /*
 void test_contour_NeedToImplement(void)
 {

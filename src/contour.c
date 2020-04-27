@@ -300,7 +300,7 @@ ContourPoint * find_best_front(ContourPoint *prev, const int *data,  int row, co
     }
 }
 
-int follow_contour(ContourPoint *prev, const int *data, const int *filtered_data, int *pixel_in_contour, int row, const int *basebins, const int *nbins_in_row) {
+int follow_contour(ContourPoint *prev, const int *data, const int *filtered_data, int *pixel_in_contour, int row, int nrows, const int *basebins, const int *nbins_in_row) {
     ContourPoint *next_point;
     next_point = find_best_front(prev, data, row, basebins,nbins_in_row);
     int count = 1;
@@ -319,15 +319,17 @@ int follow_contour(ContourPoint *prev, const int *data, const int *filtered_data
             Vector gradient0 = gradient(bin_window);
             for (int i = 0; i < 3; i++) {
                 for (int j = 0; j < 3; j++) {
-                    if (i != 1 && j != 1) {
+                    if (i != 1 || j != 1) {
                         int bin = get_bin_number(prev->bin, i * 3 + j, row,basebins, nbins_in_row);
-                        get_window(bin, row + j - 1, 3, filtered_data, nbins_in_row, basebins, bin_window);
-                        Vector gradient1 = gradient(bin_window);
-                        double product = dot(gradient0, gradient1);
-                        if (product > max_product) {
-                            max_product = product;
-                            max_idx = i * 3 + j;
-                            max_bin = bin;
+                        if (!pixel_in_contour[bin]) {
+                            get_window(bin, row + j - 1, 3, filtered_data, nbins_in_row, basebins, bin_window);
+                            Vector gradient1 = gradient(bin_window);
+                            double product = dot(gradient0, gradient1);
+                            if (product > max_product) {
+                                max_product = product;
+                                max_idx = i * 3 + j;
+                                max_bin = bin;
+                            }
                         }
                     }
 
@@ -357,7 +359,17 @@ int follow_contour(ContourPoint *prev, const int *data, const int *filtered_data
                 next_row = row;
                 break;
         }
-        count += follow_contour(next_point, data, filtered_data, pixel_in_contour, next_row, basebins, nbins_in_row);
+
+        /*
+         * If the next point is too close to the edge of the map, we still need to increment the counter, but we don't
+         * want to try following the contour any further
+         */
+        if (next_row < nrows - 2 && next_row > 1 && next_point->bin > basebins[next_row] + 1 && next_point->bin < basebins[next_row + 1] - 2) {
+            count += follow_contour(next_point, data, filtered_data, pixel_in_contour, next_row, nrows, basebins,
+                                    nbins_in_row);
+        } else {
+            count++;
+        }
     }
 
     return count;
