@@ -75,17 +75,21 @@ Vector gradient(int *window) {
  */
 int turn_too_sharp(ContourPoint *tail, int next_theta) {
     int counter = 0;
+    int is_turn_too_sharp = 0;
     ContourPoint *tmp = tail;
     while (tmp->prev->prev != NULL && counter < 5) {
         int dtheta = mod(tmp->angle - next_theta + 180, 360) - 180;
         dtheta = dtheta < -180 ? dtheta + 360 : dtheta;
         dtheta = abs(dtheta);
-        if (dtheta > 90) return 1;
+        if (dtheta > 90) {
+            is_turn_too_sharp = 1;
+            break;
+        }
         tmp = tmp->prev;
         counter++;
 
     }
-    return 0;
+    return is_turn_too_sharp;
 }
 
 /*
@@ -206,8 +210,9 @@ ContourPoint * new_contour_point(ContourPoint *prev, int bin, int angle) {
  * returns:
  *      int: bin number of the desired bin
  */
-static int get_bin_number(int bin, int i, int row, int *basebins, int *nbins_in_row) {
+static int get_bin_number(int bin, int i, int row, const int *basebins, const int *nbins_in_row) {
     double ratio;
+    int next_bin;
     switch(i) {
         case 0:
             ratio = (bin - basebins[row]) / (double) nbins_in_row[row];
@@ -222,10 +227,10 @@ static int get_bin_number(int bin, int i, int row, int *basebins, int *nbins_in_
             next_bin = (int) (ratio * nbins_in_row[row - 1] + 0.5)  + basebins[row - 1] + 1;
             break;
         case 3:
-            next_bin = prev->bin - 1;
+            next_bin = bin - 1;
             break;
         case 5:
-            next_bin = prev->bin + 1;
+            next_bin = bin + 1;
         case 6:
             ratio = (bin - basebins[row]) / (double) nbins_in_row[row];
             next_bin = (int) (ratio * nbins_in_row[row + 1] + 0.5)  + basebins[row + 1] - 1;
@@ -239,6 +244,7 @@ static int get_bin_number(int bin, int i, int row, int *basebins, int *nbins_in_
             next_bin = (int) (ratio * nbins_in_row[row + 1] + 0.5)  + basebins[row + 1] + 1;
             break;
     }
+    return next_bin;
 }
 
 /*
@@ -294,41 +300,41 @@ ContourPoint * find_best_front(ContourPoint *prev, const int *data,  int row, co
     }
 }
 
-int follow_contour(ContourPoint prev, const int *data, const int *filtered_data, int *pixel_in_contour, int row, const int *basebins, const int *nbins_in_row) {
+int follow_contour(ContourPoint *prev, const int *data, const int *filtered_data, int *pixel_in_contour, int row, const int *basebins, const int *nbins_in_row) {
     ContourPoint *next_point;
     next_point = find_best_front(prev, data, row, basebins,nbins_in_row);
-
+    int count = 1;
     double ratio = 0;
-
+    int max_bin;
     if (next_point == NULL) {
         int outer_window[25];
         get_window(prev->bin, row, 5, filtered_data, nbins_in_row, basebins, outer_window);
         double ratio = gradient_ratio(outer_window);
         if (ratio > 0.7) {
+            int bin_window[9];
             double max_product = -1;
             Vector v;
             int max_idx = -1;
-            get_window(bin, row, 3, filteredData, nBinsInRow, basebins, smallWindow, fillValue, false);
-            struct gradientVector gradient0 = gradient(smallWindow, fillValue);
+            get_window(prev->bin, row, 3, filtered_data, nbins_in_row, basebins, bin_window);
+            Vector gradient0 = gradient(bin_window);
             for (int i = 0; i < 3; i++) {
                 for (int j = 0; j < 3; j++) {
                     if (i != 1 && j != 1) {
-                        int bin_window[9];
                         int bin = get_bin_number(prev->bin, i * 3 + j, row,basebins, nbins_in_row);
-                        get_window(bin, row + j - 1, 3, filtered_data,
-                                   nbins_in_row, basebins, bin_window);
-                        gradient1 = gradient(bin_window, fillValue);
+                        get_window(bin, row + j - 1, 3, filtered_data, nbins_in_row, basebins, bin_window);
+                        Vector gradient1 = gradient(bin_window);
                         double product = dot(gradient0, gradient1);
-                        if (product > maxProduct) {
+                        if (product > max_product) {
                             max_product = product;
                             max_idx = i * 3 + j;
+                            max_bin = bin;
                         }
                     }
 
                 }
             }
-            if (maxProduct > 0) {
-                next_point = new_contour_point(prev, bin, ANGLES[max_idx]);
+            if (max_product > 0) {
+                next_point = new_contour_point(prev, max_bin, ANGLES[max_idx]);
             }
         }
     }
