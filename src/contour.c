@@ -300,6 +300,25 @@ ContourPoint * find_best_front(ContourPoint *prev, const int *data,  int row, co
     }
 }
 
+/*
+ * Function:  find_best_front
+ * --------------------
+ * Recursive function for growing the contour using the previously detected edge pixels and gradients.
+ *
+ * args:
+ *      ContourPoint *prev: the last edge pixel in the current contour
+ *      int *data: pointer to a boolean array representing the pixels status as an edge pixel
+ *      int *filtered_data: point to an array containing the data that resulted from applying a median filter to
+ *      the original data
+ *      int row: the row of the last edge pixel in the current contour
+ *      int nrows: the number of rows in the binning scheme
+ *      int *basebins: pointer to an array containing the index of the first bin of each row
+ *      int *nbins_in_row: pointer to an array containing the number of bins in each row
+ *
+ * returns:
+ *      int: the number of points in the contour that are contained in the segment of the contour starting with
+ *      the current point
+ */
 int follow_contour(ContourPoint *prev, const int *data, const int *filtered_data, int *pixel_in_contour, int row, int nrows, const int *basebins, const int *nbins_in_row) {
     ContourPoint *next_point;
     next_point = find_best_front(prev, data, row, basebins,nbins_in_row);
