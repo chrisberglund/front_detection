@@ -1,26 +1,9 @@
-//
-// Created by Christopher Berglund on 11/1/19.
-//
 #include <stdbool.h>
 #include <math.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include "helpers.h"
 #include "cayula.h"
-
-int findClosestValue(int arr[], int l, int r, int x) {
-    int mid = l + (r - l) / 2;
-    if (r >= l) {
-        if (arr[mid] == x)
-            return mid;
-
-        if (arr[mid] > x)
-            return findClosestValue(arr, l, mid - 1, x);
-
-        return findClosestValue(arr, mid + 1, r, x);
-    }
-
-    return mid;
-}
 
 /*
  * Function:  get_window
@@ -31,7 +14,7 @@ int findClosestValue(int arr[], int l, int r, int x) {
  *
  * args:
  *      int bin: bin number of the center bin in the window. If the width of the window is even, then this is the upper
- *      left bin in the center. Bin numbers begin with 1.
+ *      left bin in the center.
  *      int row: the row number of the center bin. Row numbers begin with 0.
  *      int width: the width of the desired window. Width must be a positive number greater than 2.
  *      int *n_bins_in_row: pointer to an array containing the number of bins in each row
@@ -47,14 +30,15 @@ int get_window(int bin, int row, int width, const int *data, const int *n_bins_i
     double ratio = (bin - basebins[row]) / (double) n_bins_in_row[row];
     if (width % 2 == 0) {
         int max_distance = width >> 1;
-        int currentRow = row - max_distance + 1;
+        int current_row = row - max_distance;
         int area = width * width;
         for (int i = 0; i < area; i += width) {   //Iterate through the first bins of each row in window
-            column_neighbor = (int) (ratio * n_bins_in_row[currentRow] + 0.5) + basebins[currentRow];
+            column_neighbor = (int) (ratio * n_bins_in_row[current_row] + 0.5) + basebins[current_row] + 1;
             for (int j = 0; j < width; j++) {
                 window[i + j] = data[column_neighbor + j - max_distance];
+                if (window[i+j] == FILL_VALUE)  nfill_values++;
             }
-            currentRow++;
+            current_row++;
         }
     } else {
         int max_distance = (width - 1) >> 1;
@@ -64,11 +48,39 @@ int get_window(int bin, int row, int width, const int *data, const int *n_bins_i
             column_neighbor = (int) (ratio * n_bins_in_row[current_row] + 0.5) + basebins[current_row];
             for (int j = 0; j < width; j++) {
                 window[i + j] = data[column_neighbor + j - max_distance];
-                if (window[i+j] == FILL_VALUE)
-                    nfill_values++;
+                if (window[i+j] == FILL_VALUE)  nfill_values++;
             }
             current_row++;
         }
     }
     return nfill_values;
+}
+
+void get_bin_window(int bin, int row, int width, const int *n_bins_in_row, const int *basebins, int window[]) {
+    int nfill_values = 0;
+    int column_neighbor;
+    double ratio = (bin - basebins[row]) / (double) n_bins_in_row[row];
+    if (width % 2 == 0) {
+        int max_distance = width >> 1;
+        int current_row = row - max_distance;
+        int area = width * width;
+        for (int i = 0; i < area; i += width) {   //Iterate through the first bins of each row in window
+            column_neighbor = (int) (ratio * n_bins_in_row[current_row] + 0.5) + basebins[current_row] + 1;
+            for (int j = 0; j < width; j++) {
+                window[i + j] = column_neighbor + j - max_distance;
+            }
+            current_row++;
+        }
+    } else {
+        int max_distance = (width - 1) >> 1;
+        int current_row = row - max_distance;
+        int area = width * width;
+        for (int i = 0; i < area; i += width) {   //Iterate through the first bins of each row in window
+            column_neighbor = (int) (ratio * n_bins_in_row[current_row] + 0.5) + basebins[current_row];
+            for (int j = 0; j < width; j++) {
+                window[i + j] = column_neighbor + j - max_distance;
+            }
+            current_row++;
+        }
+    }
 }

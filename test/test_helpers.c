@@ -58,3 +58,27 @@ void test_get_window_fill_values(void) {
 
     //TEST_ASSERT_EQUAL_DOUBLE(0.2,0.2);
 }
+
+void test_get_window_even(void) {
+    int data[81] = {
+            0, 0, 0, 0, 1, 0, 0, 0, 0,
+            0, 0, 0, 0, 1, 0, 0, 0, 0,
+            0, 0, 1, 0, 1, 0, 0, 0, 0,
+            0, 0, 1, 0, 1, 0, 0, 0, 0,
+            0, 0, 1, 1, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 1, 0, 0, 0, 0,
+            0, 0, 0, 0, 1, 0, 0, 0, 0,
+            0, 0, 0, 0, 1, 0, 0, 0, 0
+    };
+    int window[16];
+    int basebins[9];
+    int nbins_in_row[9];
+    for (int i = 0; i < 9; i++) {
+        basebins[i] = i * 9;
+        nbins_in_row[i] = 9;
+    }
+    int expected_window[16] = {1, 0, 1, 0,1, 0, 1, 0,1, 1, 0, 0,0, 0, 0, 0,};
+    get_window(39, 4, 4, data, nbins_in_row, basebins, window);
+    TEST_ASSERT_EQUAL_INT_ARRAY(expected_window, window, 16);
+}

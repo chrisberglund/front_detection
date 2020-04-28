@@ -19,7 +19,7 @@ void cayula(int *bins, int *data, int *out_data, int n_bins, int nrows, int *n_b
     int *filtered_data = malloc(n_bins * sizeof(int));
 
     median_filter(data, filtered_data, n_bins, nrows, n_bins_in_row, basebins);
-    int *edgePixels = (int *) malloc(n_bins * sizeof(int));
+    int *edge_pixels = malloc(n_bins * sizeof(int));
     for (int i = 0; i < n_bins; i++) {
         if (data[i] == FILL_VALUE) {
             out_data[i] = FILL_VALUE;
@@ -27,96 +27,36 @@ void cayula(int *bins, int *data, int *out_data, int n_bins, int nrows, int *n_b
             out_data[i] = 0;
         }
     }
-
-    for (int i = WINDOW_WIDTH / 2 - 1; i < nrows - WINDOW_WIDTH / 2; i += WINDOW_WIDTH / 2) {
-        for (int j = WINDOW_WIDTH / 2 - 1; j < n_bins_in_row[i] - WINDOW_WIDTH / 2; j += WINDOW_WIDTH / 2) {
-            if (n_bins_in_row[i - WINDOW_WIDTH / 2] < WINDOW_WIDTH || n_bins_in_row[i + WINDOW_WIDTH / 2] < WINDOW_WIDTH)
+    int half_step = WINDOW_WIDTH / 2;
+    int area = WINDOW_WIDTH * WINDOW_WIDTH;
+    for (int i = half_step - 1; i < nrows - half_step; i += half_step) {
+        for (int j = half_step - 1; j < n_bins_in_row[i] - half_step; j += half_step) {
+            if (n_bins_in_row[i - half_step] < WINDOW_WIDTH || n_bins_in_row[i + half_step] < WINDOW_WIDTH) {
                 continue;
-            int *window = (int *) malloc(WINDOW_WIDTH * WINDOW_WIDTH * sizeof(int));
-            int *binWindow = (int *) malloc(WINDOW_WIDTH * WINDOW_WIDTH * sizeof(int));
+            }
+            int window[area];
             get_window(basebins[i] + j, i, WINDOW_WIDTH, filtered_data, n_bins_in_row, basebins, window);
-            get_window(basebins[i] + j, i, WINDOW_WIDTH, bins, n_bins_in_row, basebins, binWindow);
-            int threshold = histogram_analysis(window, WINDOW_WIDTH, 256);
+            int threshold = histogram_analysis(window);
 
             if (threshold > 0) {
-                if (isCohesive(window, WINDOW_WIDTH, threshold)) {
-                    int *edgeWindow = malloc(WINDOW_WIDTH * WINDOW_WIDTH * sizeof(int));
-                    locateEdgePixels(window, edgeWindow, WINDOW_WIDTH, threshold);
+                int bin_window[area];
+                get_bin_window(basebins[i] + j, i, WINDOW_WIDTH, n_bins_in_row, basebins, bin_window);
+                if (cohesive(window, threshold)) {
+                    int edge_window[area];
+                    find_edge(window, edge_window, threshold);
                     for (int k = 0; k < WINDOW_WIDTH; k++) {
                         for (int m = 0; m < WINDOW_WIDTH; m++) {
-                            if (edgeWindow[k * WINDOW_WIDTH + m] == threshold) {
-                                edgePixels[binWindow[k * WINDOW_WIDTH + m] - 1] = edgeWindow[k * WINDOW_WIDTH + m];
+                            if (edgeWindow[k * WINDOW_WIDTH + m]) {
+                                edge_pixels[bin_window[k * WINDOW_WIDTH + m]] = edgeWindow[k * WINDOW_WIDTH + m];
                             }
                         }
                     }
-                    free(edgeWindow);
                 }
             }
-            free(window);
-            free(binWindow);
         }
     }
+    contour(edge_pixels, filtered_data, out_data, n_bins, nrows, n_bins_in_row, basebins);
     free(filtered_data);
+    free(edge_pixels);
 }
-
-/*
-void cayula(int totalBins, int nDataBins, int nrows, int fillValue,
-            int *dataBins, int *rows, double *inData, double *weights, double *lats, double *lons, int *outData,
-            bool chlora) {
-    int *bins = (int *) malloc(totalBins * sizeof(int));
-    int *nBinsInRow = (int *) malloc(nrows * sizeof(int));
-    int *basebins = (int *) malloc(nrows * sizeof(int));
-    int *data = (int *) malloc(totalBins * sizeof(int));
-
-    createFullBinArray(totalBins, nDataBins, nrows, dataBins, fillValue,
-                       bins, inData, weights, lats, lons, nBinsInRow, basebins, data, chlora);
-
-    int *filteredData = (int *) malloc(totalBins * sizeof(int));
-    median_filter(bins, data, filteredData, totalBins, nrows, nBinsInRow, basebins, fillValue);
-
-    int *edgePixels = (int *) malloc(totalBins * sizeof(int));
-
-    for (int i = 0; i < totalBins; i++) {
-        if (data[i] == fillValue) {
-            outData[i] = fillValue;
-        } else {
-            outData[i] = 0;
-        }
-    }
-    free(data);
-    for (int i = WINDOW_WIDTH / 2 - 1; i < nrows - WINDOW_WIDTH / 2; i += WINDOW_WIDTH / 2) {
-        for (int j = WINDOW_WIDTH / 2 - 1; j < nBinsInRow[i] - WINDOW_WIDTH / 2; j += WINDOW_WIDTH / 2) {
-            if (nBinsInRow[i - WINDOW_WIDTH / 2] < WINDOW_WIDTH || nBinsInRow[i + WINDOW_WIDTH / 2] < WINDOW_WIDTH)
-                continue;
-            int *window = (int *) malloc(WINDOW_WIDTH * WINDOW_WIDTH * sizeof(int));
-            int *binWindow = (int *) malloc(WINDOW_WIDTH * WINDOW_WIDTH * sizeof(int));
-            get_window(basebins[i] + j, i, WINDOW_WIDTH, filteredData, nBinsInRow, basebins, window, fillValue, false);
-            get_window(basebins[i] + j, i, WINDOW_WIDTH, bins, nBinsInRow, basebins, binWindow, fillValue, false);
-            int threshold = histogram_analysis(window, WINDOW_WIDTH, 256);
-
-            if (threshold > 0) {
-                if (isCohesive(window, WINDOW_WIDTH, threshold)) {
-                    int *edgeWindow = malloc(WINDOW_WIDTH * WINDOW_WIDTH * sizeof(int));
-                    locateEdgePixels(window, edgeWindow, WINDOW_WIDTH, threshold);
-                    for (int k = 0; k < WINDOW_WIDTH; k++) {
-                        for (int m = 0; m < WINDOW_WIDTH; m++) {
-                            if (edgeWindow[k * WINDOW_WIDTH + m] == threshold) {
-                                edgePixels[binWindow[k * WINDOW_WIDTH + m] - 1] = edgeWindow[k * WINDOW_WIDTH + m];
-                            }
-                        }
-                    }
-                    free(edgeWindow);
-                }
-            }
-            free(window);
-            free(binWindow);
-        }
-    }
-    contour(bins, edgePixels, filteredData, outData, totalBins, nrows, nBinsInRow, basebins, fillValue);
-    free(nBinsInRow);
-    free(basebins);
-    free(filteredData);
-    free(edgePixels);
-    free(bins);
-}*/
 

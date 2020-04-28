@@ -395,7 +395,7 @@ int follow_contour(ContourPoint *prev, const int *data, const int *filtered_data
 
     return count;
 }
-/
+
 void contour(int *data, int *filtered_data, int *out_data, int nbins, int nrows, const int *nbins_in_row, const int *basebins) {
     int *pixel_in_contour = malloc(sizeof(int) * nbins);
     memset(pixel_in_contour, 0, nbins * sizeof(int));
@@ -412,7 +412,7 @@ void contour(int *data, int *filtered_data, int *out_data, int nbins, int nrows,
                     current->next = new_contour(current, j);
                     current = current->next;
                 }
-                ContourPoint * point = new_contour_point(NULL, j, 0)
+                ContourPoint * point = new_contour_point(NULL, j, 0);
                 int length = follow_contour(point, data, filtered_data, pixel_in_contour, i, nrows, basebins, nbins_in_row);
             }
         }
