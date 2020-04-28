@@ -6,7 +6,7 @@ import pandas as pd
 from multiprocessing import Pool, cpu_count
 
 
-def sied(total_bins, nrows, fill_value, rows, bins, data, weights, date, chlor_a=False, glob=False):
+def sied(df, nbins, nrows, nbins_in_row, basebins):
     """
     Performs the Belkin-O'Reilly front detection algorithm on the provided bins
     :param total_bins: total number of bins in the binning scheme
@@ -21,27 +21,12 @@ def sied(total_bins, nrows, fill_value, rows, bins, data, weights, date, chlor_a
     :return: pandas dataframe containing bin values of each bin resulting from edge detection algorithm
     """
     _cayula = ctypes.CDLL('./sied.so')
-    _cayula.cayula.argtypes = (ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.POINTER(ctypes.c_int),
-                               ctypes.POINTER(ctypes.c_int),
-                               ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double),
-                               ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double),
-                               ctypes.POINTER(ctypes.c_int), ctypes.c_bool)
-    bins_array_type = ctypes.c_int * len(bins)
-    lats = (ctypes.c_double * total_bins)()
-    lons = (ctypes.c_double * total_bins)()
-    rows = (ctypes.c_int * len(rows))(*rows)
-    data_array = (ctypes.c_double * len(data))(*data)
-    data_out = (ctypes.c_int * total_bins)()
-    weights_array = (ctypes.c_double * len(bins))(*weights)
-    _cayula.cayula(total_bins, len(bins), nrows, fill_value, bins_array_type(*bins), rows, data_array, weights_array,
-                   lats,
-                   lons,
-                   data_out, chlor_a)
-    lats = list(lats)
-    lons = list(lons)
-    final_data = list(data_out)
-    df = pd.DataFrame(
-        data={"Latitude": lats, "Longitude": lons, "Data": final_data, "Date": np.repeat(date, len(lats))})
+    data = (ctypes.c_int * nbins)(df["Data"].tolist())
+    out_data = (ctypes.c_int * nbins)
+    _cayula.cayula.argtypes = (ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int), ctypes.c_int,
+                               ctypes.c_int, ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int))
+    _cayula.cayula(data, out_data, nbins, nrows, nbins_in_row, basebins)
+    df["Data"] = out_data
     return df
 
 
@@ -107,11 +92,8 @@ def crop(values, weights, data_bins, total_bins, nrows, chlora):
     data_bins = (ctypes.c_int * len(data_bins))(*data_bins)
     _cayula.initialize(in_data, out_data, len(bins), len(values), total_bins, data_bins, bins, chlora)
     df["Data"] = out_data
-    out_out_data = (ctypes.c_int * len(bins))
-    _cayula.cayula.argtypes = (ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int), ctypes.c_int,
-                               ctypes.c_int, ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int))
-    _cayula.cayula(bins, out_data, len(bins), nrows, nbins_in_row, basebins)
-    df.to_csv("~/Desktop/testing.csv", index=False)
+    print("test")
+    return df, nrows, nbins_in_row, basebins
 
 
 def get_params_modis(dataset, data_str):
@@ -148,11 +130,11 @@ def map_bins(dataset, latmin, latmax, lonmin, lonmax, glob):
     else:
         total_bins, nrows, bins, data, weights, date = get_params_modis(dataset, "chlor_a")
         rows = []
-    df = crop(data, weights, bins, total_bins, nrows, True)
+    df, nrows, nbins_in_row, basebins = crop(data, weights, bins, total_bins, nrows, True)
     # df = sied(total_bins, nrows, -999, rows, bins, data, weights, date, True, glob)
-    print("Cropping")
     df = df[(df.Latitude >= latmin) & (df.Latitude <= latmax) &
             (df.Longitude >= lonmin) & (df.Longitude <= lonmax)]
+    df = sied(df, len(df), nrows, nbins_in_row, basebins)
     df = df[df['Data'] > -999]
     return df
 
@@ -190,7 +172,7 @@ def map_files(directory, latmin, latmax, lonmin, lonmax):
     :param lonmin: minimum longitude to include in output
     :param lonmax: maximum longitude to include in output
     """
-    cwd = "../" + os.getcwd()
+    cwd =  "../" + os.getcwd()
     glob = False
     files = []
     outfiles = []

@@ -3,7 +3,6 @@
 #include "prefilter.h"
 #include "helpers.h"
 #include "cohesion.h"
-#include "locator.h"
 #include "contour.h"
 #include "filter.h"
 #include "cayula.h"
@@ -13,7 +12,7 @@ void define(double *lats, double *lons, int *outRows, int *outBins, int nrows, i
     getLatLon(lats, lons, outRows, outBins, nrows, totalBins);
 }
 
-void cayula(int *bins, int *data, int *out_data, int n_bins, int nrows, int *n_bins_in_row, int *basebins) {
+void cayula(int *data, int *out_data, int n_bins, int nrows, int *n_bins_in_row, int *basebins) {
     int *filtered_data = malloc(n_bins * sizeof(int));
 
     median_filter(data, filtered_data, n_bins, nrows, n_bins_in_row, basebins);
@@ -44,8 +43,8 @@ void cayula(int *bins, int *data, int *out_data, int n_bins, int nrows, int *n_b
                     find_edge(window, edge_window, threshold);
                     for (int k = 0; k < WINDOW_WIDTH; k++) {
                         for (int m = 0; m < WINDOW_WIDTH; m++) {
-                            if (edgeWindow[k * WINDOW_WIDTH + m]) {
-                                edge_pixels[bin_window[k * WINDOW_WIDTH + m]] = edgeWindow[k * WINDOW_WIDTH + m];
+                            if (edge_window[k * WINDOW_WIDTH + m]) {
+                                edge_pixels[bin_window[k * WINDOW_WIDTH + m]] = edge_window[k * WINDOW_WIDTH + m];
                             }
                         }
                     }

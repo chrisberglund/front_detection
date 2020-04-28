@@ -2,7 +2,7 @@
  * Functions for calculating the integer data values to be used in the single image edge detection algorithm
  */
 
-#include "../include/initialize/initialize.h"
+#include "initialize.h"
 #include <stdlib.h>
 #include <math.h>
 #include <stdio.h>

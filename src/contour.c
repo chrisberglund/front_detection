@@ -1,6 +1,7 @@
 #include "contour.h"
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include "helpers.h"
 #include "cayula.h"
 
@@ -393,6 +394,22 @@ int follow_contour(ContourPoint *prev, const int *data, const int *filtered_data
     return count;
 }
 
+/*
+ * Function:  contour
+ * --------------------
+ * Creates and extends contours using previously detected edges and gradients to define the final edges.
+ *
+ * args:
+ *      int *data: pointer to a boolean array representing the pixels status as an edge pixel
+ *      int *filtered_data: point to an array containing the data that resulted from applying a median filter to
+ *      the original data
+ *      int *out_data: pointer an array to write the front values for each pixel. 1 for a front, 0 for not
+ *      int nbins: the number of bins in the binning scheme
+ *      int nrows: the number of rows in the binning scheme
+ *      int *nbins_in_row: the number of bins in each row
+ *      int *basebins: pointer to an array containing the index of the first bin of each row
+ *
+ */
 void contour(int *data, int *filtered_data, int *out_data, int nbins, int nrows, const int *nbins_in_row, const int *basebins) {
     int *pixel_in_contour = malloc(sizeof(int) * nbins);
     memset(pixel_in_contour, 0, nbins * sizeof(int));
