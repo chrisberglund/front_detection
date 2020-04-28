@@ -151,10 +151,12 @@ double gradient_ratio(const int *window) {
 *
 * args:
 *      Contour *n: the node of the linked list to delete
-*
+* returns:
+ *     Contour *: pointer to next contour
 */
-void del_contour(Contour *n) {
+Contour * del_contour(Contour *n) {
     ContourPoint *c = n->first_point;
+    Contour *next = n->next;
     while (c->next != NULL) c = c->next;
     while (c->prev != NULL) {
         ContourPoint *tmp = c->prev;
@@ -169,6 +171,7 @@ void del_contour(Contour *n) {
         }
     }
     free(n);
+    return next;
 }
 
 /*
@@ -186,11 +189,11 @@ void del_contour(Contour *n) {
  */
 ContourPoint * new_contour_point(ContourPoint *prev, int bin, int angle) {
     ContourPoint *c = malloc(sizeof(ContourPoint));
-    prev->next = c;
     c->bin = bin;
     c->angle = angle;
     c->prev = prev;
     c->next = NULL;
+    if (prev != NULL)     prev->next = c;
     return c;
 }
 
@@ -332,7 +335,6 @@ int follow_contour(ContourPoint *prev, const int *data, const int *filtered_data
         if (ratio > 0.7) {
             int bin_window[9];
             double max_product = -1;
-            Vector v;
             int max_idx = -1;
             get_window(prev->bin, row, 3, filtered_data, nbins_in_row, basebins, bin_window);
             Vector gradient0 = gradient(bin_window);
@@ -393,142 +395,43 @@ int follow_contour(ContourPoint *prev, const int *data, const int *filtered_data
 
     return count;
 }
-/*
-void clearSubList(struct node *head) {
-    struct subnode *subhead = head->child;
-    struct subnode *tmp = NULL;
-    head->child = NULL;
-    while (subhead != NULL) {
-        tmp = subhead->next;
-        free(subhead);
-        subhead = tmp;
-    }
-}*/
-/*
-void trim(struct node *head) {
-    struct node *current = head;
-    struct node *next;
-    struct node *prev;
-    while (current != NULL) {
-        if (current->length < 4) {
-            clearSubList(current);
-            prev = current->prev;
-            next = current->next;
-            if (prev != NULL) {
-                prev->next = next;
-                if (next != NULL) {
-                    next->prev = prev;
-                }
-            }
-            if (current == head) {
-                head = NULL;
-                free(head);
-            } else
-                free(current);
-            current = next;
-        } else {
-            current = current->next;
-        }
-    }
-}
-*/
-
-
-void contour(int *data, int *filtered_data, int nbins, int nrows, const int *nbins_in_row, const int *basebins) {
+/
+void contour(int *data, int *filtered_data, int *out_data, int nbins, int nrows, const int *nbins_in_row, const int *basebins) {
     int *pixel_in_contour = malloc(sizeof(int) * nbins);
     memset(pixel_in_contour, 0, nbins * sizeof(int));
-    Contour *contours = NULL;
-    for (int i = 0; i < nrows; i++) {
-        for (int j = basebins[i]; j < basebins[i] + nbins_in_row[i]; j++) {
+    Contour *head = NULL;
+    Contour *current = NULL;
+    for (int i = 2; i < nrows - 2; i++) {
+        for (int j = basebins[i] + 2; j < basebins[i] + nbins_in_row[i] - 2; j++) {
             if (data[j] && !pixel_in_contour[j]) {
                 pixel_in_contour[j] = 1;
-                if (contours == NULL) {
-                    contours = new_contour(NULL, j);
+                if (head == NULL) {
+                    current = new_contour(NULL, j);
+                    head = current;
                 } else {
-                    contours->next = new_contour(contours, j);
-                    contours = contours->next;
+                    current->next = new_contour(current, j);
+                    current = current->next;
                 }
-
-                //TODO Grow contour
+                ContourPoint * point = new_contour_point(NULL, j, 0)
+                int length = follow_contour(point, data, filtered_data, pixel_in_contour, i, nrows, basebins, nbins_in_row);
             }
         }
     }
-    //TODO Kill the contours that are too short
-}
-
-/**
- * Implements a contour following algorithm. Goes through each bin, and if the bin has been previously detected as
- * an edge, then follow neighboring bin
- * @param bins
- * @param inData
- * @param outData
- * @param ndata
- * @param nrows
- * @param nBinsInRow
- * @param basebins
- * @param fillValue
- */
- /*
-void contour2(int *bins, int *inData, int *filteredData, int *outData, int ndata, int nrows, const int *nBinsInRow,
-             const int *basebins, int fillValue) {
-    int row = 0;
-    struct node *head = NULL;
-    struct node *tail = NULL;
-    struct node *tmp = NULL;
-    head = (struct node *) malloc(sizeof(struct node));
-    tail = head;
-    head->child = NULL;
-    head->next = NULL;
-    head->length = 0;
-    head->prev = NULL;
-    bool *isInContour = (bool *) malloc(sizeof(bool) * ndata);
-    for (int i = 0; i < ndata; i++) {
-        isInContour[i] = false;
-    }
-    for (int i = 0; i < ndata; i++) {
-        if (row < 2 || row > nrows - 3) {
-            if (i == basebins[row] + nBinsInRow[row] - 1) {
-                row++;
-            }
-            continue;
-        }
-
-        if (inData[i] > 0 && !isInContour[i]) {
-            isInContour[i] = true;
-            if (tail->child != NULL) {
-                tmp = (struct node *) malloc(sizeof(struct node));
-                tail->next = tmp;
-                tmp->prev = tail;
-                tail = tmp;
-            }
-            tail->child = (struct subnode *) malloc(sizeof(struct subnode));
-            tail->next = NULL;
-            tail->child->prev = NULL;
-            tail->child->next = NULL;
-            tail->child->entryAngle = -999;
-            tail->child->bin = i + 1;
-            tail->length = followContour(i + 1, row, bins, inData, filteredData, isInContour, nBinsInRow, basebins,
-                                         fillValue, tail->child);
-        }
-        if (i == basebins[row] + nBinsInRow[row] - 1) {
-            row++;
-        }
-    }
-    free(isInContour);
-    struct node *current = head;
-    struct subnode *child = NULL;
-    struct subnode *tmpchild = NULL;
-    trim(head);
+    free(pixel_in_contour);
     while (current != NULL) {
-        child = current->child;
-        while (child != NULL) {
-            outData[(child->bin) - 1] = 1;
-            tmpchild = child->next;
-            free(child);
-            child = tmpchild;
+        if (current->length < 15) {
+            current = del_contour(current);
+        } else {
+            ContourPoint *point = current->first_point;
+            while (point->next != NULL) {
+                out_data[point->bin] = 1;
+                ContourPoint *tmp = point;
+                point = point->next;
+                free(tmp);
+            }
+            Contour *tmp_contour = current;
+            current = current->next;
+            free(tmp_contour);
         }
-        tmp = current->next;
-        free(current);
-        current = tmp;
     }
-}*/
+}
