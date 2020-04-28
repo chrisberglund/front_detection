@@ -1,15 +1,13 @@
 #include <stdlib.h>
-#include <stdio.h>
 #include "histogram.h"
-#include "../include/initialize/prefilter.h"
+#include "prefilter.h"
 #include "helpers.h"
 #include "cohesion.h"
 #include "locator.h"
 #include "contour.h"
 #include "filter.h"
 #include "cayula.h"
-#include <math.h>
-#include "../include/initialize/initialize.h"
+#include "initialize.h"
 
 void define(double *lats, double *lons, int *outRows, int *outBins, int nrows, int totalBins) {
     getLatLon(lats, lons, outRows, outBins, nrows, totalBins);
