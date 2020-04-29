@@ -117,7 +117,7 @@ double gradient_ratio(const int *window) {
             inner_window[5] = window[i * 5 + 13 + j];
             inner_window[6] = window[i * 5 + 16 + j];
             inner_window[7] = window[i * 5 + 17 + j];
-            inner_window[9] = window[i * 5 + 18 + j];
+            inner_window[8] = window[i * 5 + 18 + j];
 
             Vector g = gradient(inner_window);
             sum_magnitude += sqrt(square(g.x) + square(g.y));
