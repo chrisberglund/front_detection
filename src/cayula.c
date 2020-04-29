@@ -4,6 +4,7 @@
 #include "helpers.h"
 #include "cohesion.h"
 #include "contour.h"
+#include "stdio.h"
 #include "filter.h"
 #include "cayula.h"
 #include "initialize.h"
@@ -16,6 +17,7 @@ void cayula(int *data, int *out_data, int n_bins, int nrows, int *n_bins_in_row,
     int *filtered_data = malloc(n_bins * sizeof(int));
 
     median_filter(data, filtered_data, n_bins, nrows, n_bins_in_row, basebins);
+
     int *edge_pixels = malloc(n_bins * sizeof(int));
     for (int i = 0; i < n_bins; i++) {
         if (data[i] == FILL_VALUE) {
@@ -24,6 +26,7 @@ void cayula(int *data, int *out_data, int n_bins, int nrows, int *n_bins_in_row,
             out_data[i] = 0;
         }
     }
+
     int half_step = WINDOW_WIDTH / 2;
     int area = WINDOW_WIDTH * WINDOW_WIDTH;
     for (int i = half_step - 1; i < nrows - half_step; i += half_step) {
@@ -31,16 +34,17 @@ void cayula(int *data, int *out_data, int n_bins, int nrows, int *n_bins_in_row,
             if (n_bins_in_row[i - half_step] < WINDOW_WIDTH || n_bins_in_row[i + half_step] < WINDOW_WIDTH) {
                 continue;
             }
-            int window[area];
+            int window[1024] = {0};
             get_window(basebins[i] + j, i, WINDOW_WIDTH, filtered_data, n_bins_in_row, basebins, window);
             int threshold = histogram_analysis(window);
-
             if (threshold > 0) {
-                int bin_window[area];
+                int bin_window[1024] = {0};
                 get_bin_window(basebins[i] + j, i, WINDOW_WIDTH, n_bins_in_row, basebins, bin_window);
+
                 if (cohesive(window, threshold)) {
-                    int edge_window[area];
+                    int edge_window[1024];
                     find_edge(window, edge_window, threshold);
+
                     for (int k = 0; k < WINDOW_WIDTH; k++) {
                         for (int m = 0; m < WINDOW_WIDTH; m++) {
                             if (edge_window[k * WINDOW_WIDTH + m]) {

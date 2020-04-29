@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 from multiprocessing import Pool, cpu_count
 
-
 def sied(df, nbins, nrows, nbins_in_row, basebins):
     """
     Performs the Belkin-O'Reilly front detection algorithm on the provided bins
@@ -21,8 +20,10 @@ def sied(df, nbins, nrows, nbins_in_row, basebins):
     :return: pandas dataframe containing bin values of each bin resulting from edge detection algorithm
     """
     _cayula = ctypes.CDLL('./sied.so')
-    data = (ctypes.c_int * nbins)(df["Data"].tolist())
-    out_data = (ctypes.c_int * nbins)
+    print(basebins[nrows-1])
+    print(len(df))
+    data = (ctypes.c_int * nbins)(*df["Data"].tolist())
+    out_data = (ctypes.c_int * nbins)()
     _cayula.cayula.argtypes = (ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int), ctypes.c_int,
                                ctypes.c_int, ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int))
     _cayula.cayula(data, out_data, nbins, nrows, nbins_in_row, basebins)
@@ -92,7 +93,6 @@ def crop(values, weights, data_bins, total_bins, nrows, chlora):
     data_bins = (ctypes.c_int * len(data_bins))(*data_bins)
     _cayula.initialize(in_data, out_data, len(bins), len(values), total_bins, data_bins, bins, chlora)
     df["Data"] = out_data
-    print("test")
     return df, nrows, nbins_in_row, basebins
 
 
@@ -132,9 +132,7 @@ def map_bins(dataset, latmin, latmax, lonmin, lonmax, glob):
         rows = []
     df, nrows, nbins_in_row, basebins = crop(data, weights, bins, total_bins, nrows, True)
     # df = sied(total_bins, nrows, -999, rows, bins, data, weights, date, True, glob)
-    df = df[(df.Latitude >= latmin) & (df.Latitude <= latmax) &
-            (df.Longitude >= lonmin) & (df.Longitude <= lonmax)]
-    df = sied(df, len(df), nrows, nbins_in_row, basebins)
+    df = sied(df, df.shape[0], nrows, nbins_in_row, basebins)
     df = df[df['Data'] > -999]
     return df
 
@@ -194,7 +192,7 @@ def map_files(directory, latmin, latmax, lonmin, lonmax):
 
 def main():
     cwd = os.getcwd()
-    map_files(cwd + "/input", -80, 80, -180, 0)
+    map_files(cwd + "/input", -60, 60, -180, 0)
 
 
 if __name__ == "__main__":

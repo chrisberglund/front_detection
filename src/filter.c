@@ -2,6 +2,7 @@
 * Functions for applying the median filter to an array of bins using sliding 3x3 window
 */
 #include <math.h>
+#include <stdio.h>
 #include "filter.h"
 #include "helpers.h"
 #include "cayula.h"
@@ -102,6 +103,7 @@ void median_filter(int *data, int *filtered_data, int nbins, int nrows, int *nbi
      */
     for (int i = 0; i < basebins[0] + nbins_in_row[0]; i++) filtered_data[i] = FILL_VALUE;
     for (int i = basebins[last_row]; i < basebins[last_row] + nbins_in_row[last_row]; i++) filtered_data[i] = FILL_VALUE;
+
     for (int i = 1; i < nrows - 1; i++) {
         filtered_data[basebins[i]] = FILL_VALUE;
         filtered_data[basebins[i] + nbins_in_row[i] - 1] = FILL_VALUE;

@@ -100,7 +100,7 @@ int too_large(const int *histogram, int tau) {
  * returns:
  *      int: the threshold value that best divides the window
  */
-int histogram_analysis(int *window) {
+int histogram_analysis(const int *window) {
     int histogram[256];
     get_histogram(window, histogram);
     int n_low = 0, num_low = 0, n_high = 0, num_high = 0;
