@@ -132,7 +132,9 @@ double gradient_ratio(const int *window) {
      Contour *n = malloc(sizeof(Contour));
      n->prev = prev;
      n->next = NULL;
-     n->length = 1;
+
+     if (prev != NULL) prev -> next = n;
+
      ContourPoint *c = malloc(sizeof(ContourPoint));
      c->bin = bin;
      c->prev = NULL;
@@ -419,32 +421,35 @@ void contour(int *data, int *filtered_data, int *out_data, int nbins, int nrows,
         for (int j = basebins[i] + 2; j < basebins[i] + nbins_in_row[i] - 2; j++) {
             if (data[j] && !pixel_in_contour[j]) {
                 pixel_in_contour[j] = 1;
-                if (head == NULL) {
-                    current = new_contour(NULL, j);
-                    head = current;
-                } else {
-                    current->next = new_contour(current, j);
-                    current = current->next;
-                }
                 ContourPoint * point = new_contour_point(NULL, j, 0);
                 int length = follow_contour(point, data, filtered_data, pixel_in_contour, i, nrows, basebins, nbins_in_row);
+                if (head == NULL) {
+                    current = new_contour(NULL, j);
+                    current->length = length;
+                    current->first_point = point;
+                    head = current;
+                } else {
+                    current = new_contour(current, j);
+                    current->length = length;
+                    current->first_point = point;
+                }
             }
         }
     }
     free(pixel_in_contour);
-    while (current != NULL) {
-        if (current->length < 15) {
-            current = del_contour(current);
+    while (head != NULL) {
+        if (head->length < 15) {
+            head = del_contour(head);
         } else {
-            ContourPoint *point = current->first_point;
+            ContourPoint *point = head->first_point;
             while (point->next != NULL) {
                 out_data[point->bin] = 1;
-                ContourPoint *tmp = point;
-                point = point->next;
-                free(tmp);
+                ContourPoint *tmp = point->next;
+                free(point);
+                point = tmp;
             }
-            Contour *tmp_contour = current;
-            current = current->next;
+            Contour *tmp_contour = head;
+            head = head->next;
             free(tmp_contour);
         }
     }

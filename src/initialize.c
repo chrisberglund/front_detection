@@ -5,7 +5,6 @@
 #include "initialize.h"
 #include <stdlib.h>
 #include <math.h>
-#include <stdio.h>
 #include "cayula.h"
 
 /*

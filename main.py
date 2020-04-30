@@ -20,9 +20,8 @@ def sied(df, nbins, nrows, nbins_in_row, basebins):
     :return: pandas dataframe containing bin values of each bin resulting from edge detection algorithm
     """
     _cayula = ctypes.CDLL('./sied.so')
-    print(basebins[nrows-1])
-    print(len(df))
     data = (ctypes.c_int * nbins)(*df["Data"].tolist())
+    print(data[0])
     out_data = (ctypes.c_int * nbins)()
     _cayula.cayula.argtypes = (ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int), ctypes.c_int,
                                ctypes.c_int, ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int))
@@ -31,7 +30,7 @@ def sied(df, nbins, nrows, nbins_in_row, basebins):
     return df
 
 
-def renumber_bins(lats, lons, rows, bins, min_lat=-90, max_lat=90, min_lon=-180, max_lon=180):
+def renumber_bins(lats, lons, rows, bins, data, min_lat=-90, max_lat=90, min_lon=-180, max_lon=180):
     """
     Takes coordinates for the original bins and crops to provided extent. Each bin is assigned a new number so that
     the subset of bins begins with 1.
@@ -50,14 +49,16 @@ def renumber_bins(lats, lons, rows, bins, min_lat=-90, max_lat=90, min_lon=-180,
 
     """
     lons = np.array(lons)
+    """
     if min_lon > 0 and max_lon < 0:
         min_lon -= 360
         lons[lons > 0] -= 360
-    df = pd.DataFrame(data={"Latitude": list(lats), "Longitude": lons, "Row": list(rows), "Bin": list(bins)})
+        """
+    df = pd.DataFrame(data={"Latitude": list(lats), "Longitude": lons, "Data":data,"Row": list(rows), "Bin": list(bins)})
     df = df[(df["Latitude"] >= min_lat) & (df["Latitude"] <= max_lat) & (df["Longitude"] >= min_lon) & (
-                df["Longitude"] <= max_lon)].sort_values(
-        ["Latitude", "Longitude"])
-    df["New_Bin"] = np.arange(1, len(df)+1, 1)
+                df["Longitude"] <= max_lon)].sort_values("Bin")
+    df = df.sort_values("Bin")
+    df["New_Bin"] = np.arange(len(df))
     return df
 
 class DATA(ctypes.Structure):
@@ -79,20 +80,19 @@ def crop(values, weights, data_bins, total_bins, nrows, chlora):
                                    ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int), ctypes.c_bool)
     lats = (ctypes.c_double * total_bins)()
     lons = (ctypes.c_double * total_bins)()
-    out_bins = (ctypes.c_int * total_bins)()
+    bins = (ctypes.c_int * total_bins)()
     out_rows = (ctypes.c_int * total_bins)()
-    _cayula.define(lats, lons, out_rows, out_bins, nrows, total_bins)
-    df = renumber_bins(lats, lons, out_rows, out_bins, min_lat=10, max_lat=70, min_lon=20, max_lon=-110)
-    bins = df["New_Bin"].tolist()
-    nrows = len(df.groupby("Row").count()["Latitude"])
-    nbins_in_row = (ctypes.c_int * nrows)(*df.groupby("Row").count()["Latitude"].tolist())
-    basebins = (ctypes.c_int * nrows)(*df.drop_duplicates("Row")["New_Bin"].tolist())
+    _cayula.define(lats, lons, out_rows, bins, nrows, total_bins)
+
     in_data = DATA((ctypes.c_double * len(values))(*values),(ctypes.c_double * len(weights))(*weights))
     out_data = (ctypes.c_int * len(bins))()
     bins = (ctypes.c_int * len(bins))(*bins)
     data_bins = (ctypes.c_int * len(data_bins))(*data_bins)
     _cayula.initialize(in_data, out_data, len(bins), len(values), total_bins, data_bins, bins, chlora)
-    df["Data"] = out_data
+    df = renumber_bins(lats, lons, out_rows, bins, out_data, min_lat=10, max_lat=70, min_lon=-180, max_lon=-110)
+    nrows = len(df.groupby("Row").count()["Latitude"])
+    nbins_in_row = (ctypes.c_int * nrows)(*df.groupby("Row").count()["Latitude"].tolist())
+    basebins = (ctypes.c_int * nrows)(*df.drop_duplicates("Row")["New_Bin"].tolist())
     return df, nrows, nbins_in_row, basebins
 
 
@@ -131,7 +131,6 @@ def map_bins(dataset, latmin, latmax, lonmin, lonmax, glob):
         total_bins, nrows, bins, data, weights, date = get_params_modis(dataset, "chlor_a")
         rows = []
     df, nrows, nbins_in_row, basebins = crop(data, weights, bins, total_bins, nrows, True)
-    # df = sied(total_bins, nrows, -999, rows, bins, data, weights, date, True, glob)
     df = sied(df, df.shape[0], nrows, nbins_in_row, basebins)
     df = df[df['Data'] > -999]
     return df

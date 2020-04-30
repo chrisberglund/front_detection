@@ -1,6 +1,5 @@
 #include "cohesion.h"
 #include "cayula.h"
-#include <stdio.h>
 
 #define CRIT_C1 0.90
 #define CRIT_C2 0.90
