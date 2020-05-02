@@ -82,3 +82,23 @@ void test_get_window_even(void) {
     get_window(39, 4, 4, data, nbins_in_row, basebins, window);
     TEST_ASSERT_EQUAL_INT_ARRAY(expected_window, window, 16);
 }
+
+void test_get_bin_window_even(void) {
+    int data[81] = {0};
+    for (int i = 0; i < 81; i++) {
+        data[i] = i;
+    }
+    int window[16];
+    int basebins[9];
+    int nbins_in_row[9];
+    for (int i = 0; i < 9; i++) {
+        basebins[i] = i * 9;
+        nbins_in_row[i] = 9;
+    }
+    int expected_window[16] = {20, 21,22,23,
+                               29,30,31,32,
+                               38, 39, 40,41,
+                               47,48,49,50};
+    get_window(39, 4, 4, data, nbins_in_row, basebins, window);
+    TEST_ASSERT_EQUAL_INT_ARRAY(expected_window, window, 16);
+}

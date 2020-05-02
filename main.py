@@ -46,7 +46,6 @@ def renumber_bins(lats, lons, rows, bins, min_lat=-90, max_lat=90, min_lon=-180,
         :param max_lon: float, optional: The maximum longitude. Defaults to 180.
     :returns
         dataframe: Dataframe containing the original bin information as well as the new bin numbers
-
     """
     lons = np.array(lons)
     if min_lon > 0 and max_lon < 0:
@@ -54,7 +53,7 @@ def renumber_bins(lats, lons, rows, bins, min_lat=-90, max_lat=90, min_lon=-180,
         lons[lons > 0] -= 360
     df = pd.DataFrame(data={"Latitude": list(lats), "Longitude": lons, "Row": list(rows), "Bin": list(bins)})
     df = df[(df["Latitude"] >= min_lat) & (df["Latitude"] <= max_lat) & (df["Longitude"] >= min_lon) & (
-                df["Longitude"] <= max_lon)].sort_values(
+            df["Longitude"] <= max_lon)].sort_values(
         ["Latitude", "Longitude"])
     df["New_Bin"] = np.arange(1, len(df)+1, 1)
     return df
@@ -62,7 +61,7 @@ def renumber_bins(lats, lons, rows, bins, min_lat=-90, max_lat=90, min_lon=-180,
 class DATA(ctypes.Structure):
     _fields_ = [("values", ctypes.POINTER(ctypes.c_double)),("weights", ctypes.POINTER(ctypes.c_double))]
 
-def crop(values, weights, data_bins, total_bins, nrows, chlora):
+def crop(values, data_bins, total_bins, nrows, chlora):
     """
     Calculates latitude and longitude
     :param total_bins:
@@ -71,8 +70,8 @@ def crop(values, weights, data_bins, total_bins, nrows, chlora):
     """
     _cayula = ctypes.CDLL('./sied.so')
     _cayula.define.argtypes = (ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double),
-                                   ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int), ctypes.c_int,
-                                   ctypes.c_int)
+                               ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int), ctypes.c_int,
+                               ctypes.c_int)
 
     _cayula.initialize.argtypes = (DATA, ctypes.POINTER(ctypes.c_int), ctypes.c_int, ctypes.c_int, ctypes.c_int,
                                    ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int), ctypes.c_bool)
@@ -86,11 +85,11 @@ def crop(values, weights, data_bins, total_bins, nrows, chlora):
     nrows = len(df.groupby("Row").count()["Latitude"])
     nbins_in_row = (ctypes.c_int * nrows)(*df.groupby("Row").count()["Latitude"].tolist())
     basebins = (ctypes.c_int * nrows)(*df.drop_duplicates("Row")["New_Bin"].tolist())
-    in_data = DATA((ctypes.c_double * len(values))(*values),(ctypes.c_double * len(weights))(*weights))
+    in_data = (ctypes.c_int * len(bins))(*values)
     out_data = (ctypes.c_int * len(bins))()
     bins = (ctypes.c_int * len(bins))(*bins)
     data_bins = (ctypes.c_int * len(data_bins))(*data_bins)
-    _cayula.initialize(in_data, out_data, len(bins), len(values), total_bins, data_bins, bins, chlora)
+    _cayula.initialize(in_data, len(bins), len(values), total_bins, data_bins, bins, chlora)
     df["Data"] = out_data
     print("test")
     return df, nrows, nbins_in_row, basebins
@@ -109,10 +108,11 @@ def get_params_modis(dataset, data_str):
     binlist = np.array(dataset["level-3_binned_data"]["BinList"][:].tolist())
     bins = binlist[:, 0].astype("int")
     weights = binlist[:, 3]
-    data = np.array(dataset.groups["level-3_binned_data"][data_str][:].tolist())[:, 0]
+    sums = np.array(dataset.groups["level-3_binned_data"][data_str][:].tolist())[:, 0]
+    data = np.log10(sums/weights)
     date = dataset.time_coverage_start
 
-    return total_bins, nrows, bins, data, weights, date
+    return total_bins, nrows, bins, data, date
 
 
 def map_bins(dataset, latmin, latmax, lonmin, lonmax, glob):
@@ -128,9 +128,9 @@ def map_bins(dataset, latmin, latmax, lonmin, lonmax, glob):
     if glob:
         total_bins, nrows, rows, bins, data, weights, date = get_params_glob(dataset, "chlor_a")
     else:
-        total_bins, nrows, bins, data, weights, date = get_params_modis(dataset, "chlor_a")
+        total_bins, nrows, bins, data, date = get_params_modis(dataset, "chlor_a")
         rows = []
-    df, nrows, nbins_in_row, basebins = crop(data, weights, bins, total_bins, nrows, True)
+    df, nrows, nbins_in_row, basebins = crop(data, bins, total_bins, nrows, True)
     # df = sied(total_bins, nrows, -999, rows, bins, data, weights, date, True, glob)
     df = df[(df.Latitude >= latmin) & (df.Latitude <= latmax) &
             (df.Longitude >= lonmin) & (df.Longitude <= lonmax)]
@@ -172,7 +172,7 @@ def map_files(directory, latmin, latmax, lonmin, lonmax):
     :param lonmin: minimum longitude to include in output
     :param lonmax: maximum longitude to include in output
     """
-    cwd =  "../" + os.getcwd()
+    cwd =  os.getcwd()
     glob = False
     files = []
     outfiles = []

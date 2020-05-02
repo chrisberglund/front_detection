@@ -8,74 +8,46 @@
 #include <stdio.h>
 #include "cayula.h"
 
-/*
- * Function:  get_int_values
- * --------------------
- * Computes the mean data value for each bin and converts it to an integer value between 0 and 255.
- *
- * args:
- *      struct InData inData: contains the weighted sum and weight for each bin
- *      int *outData: pointer to the output array
- *      int *dataBins: pointer to an array containing the bin number for each data containing bin
- *      int nbins: number of data containing bins
- *      bool chlora: whether or not to use the log10 of the data values
- */
-static void get_int_values(InData inData, int *outData, const int *dataBins, int nbins, bool chlora) {
-    double *meanData = (double *) malloc(sizeof(double) * nbins);
-    double maxValue = -999.;
-    double minValue = 999.;
-
-    for (int i = 0; i < nbins; i++) {
-        if (inData.values[i] == FILL_VALUE) {
-            meanData[i] = FILL_VALUE;
-            outData[dataBins[i] - 1] = FILL_VALUE;
-        } else {
-            meanData[i] = chlora ? log10(inData.values[i] / inData.weights[i]) : inData.values[i] / inData.weights[i];
-            if (meanData[i] < minValue)
-                minValue = meanData[i];
-            else if (meanData[i] > maxValue)
-                maxValue = meanData[i];
-        }
-    }
-    /*
-     * Converts the mean data value to integers on a scale from 0 to 255
-     */
-    for (int i = 0; i < nbins; i++) {
-        if (meanData[i] != FILL_VALUE) {
-            double ratio = (meanData[i] + fabs(minValue)) / fabs(maxValue - minValue);
-            outData[dataBins[i] - 1] = (int) floor(ratio * 255);
-        }
-    }
-    free(meanData);
-}
-
 
 /*
  * Function:  initialize
  * --------------------
- * Fills an array with integer values of the input data with missing data filled with the fill value. Only bins in the
- * provided bin numbers are copied to the output array.
+ * Fills an array with integer values of the input data ranging from 0 to 255 with missing data filled with the fill value.
  *
  * args:
- *      struct InData inData: contains the weighted sum and weight for each bin
- *      int *outData: pointer to the output array
+ *      double *in_data: pointer to an array containing the input data
+ *      int *out_data: pointer to the output array
  *      int nbins: number of bins in the area of interest
- *      int nDataBins: number of data containing bins
- *      int nTotalBins: total number of bins in the binning scheme
- *      int *dataBins: pointer to an array containing the bin number for each data containing bin
+ *      int ndata_bins: number of data containing bins
+ *      int ntotal_bins: total number of bins in the binning scheme
+ *      int *data_bins: pointer to an array containing the bin number for each data containing bin
  *      int *bins: pointer to an array containing the bin number for all bins in the area of interest
- *      bool chlora: whether or not to use the log10 of the data values
  */
-void initialize(InData inData, int *outData, int nbins, int nDataBins, int nTotalBins, int *dataBins, const int *bins,
-               bool chlora) {
-    int *data = (int *) malloc(sizeof(int) * nTotalBins);
-    for (int i = 0; i < nTotalBins; i++) {
-        data[i] = FILL_VALUE;
+
+void initialize(double *in_data, int *out_data, int nbins, int ndata_bins, int ntotal_bins, int *data_bins, const int *bins) {
+
+    int i = 0, j = 0;
+    double min_value = 999.;
+    double max_value = -999.;
+    for (int i = 0; i < ndata_bins; i++) {
+        if (in_data[i] < min_value) {
+            min_value = in_data[i];
+        } else if (in_data[i] > max_value) {
+            max_value = in_data[i]
+        }
     }
 
-    get_int_values(inData, data, dataBins, nDataBins, chlora);
-    for (int i = 0; i < nbins; i++) {
-        outData[i] = data[bins[i] - 1];
+    while (i < ndata_bins || j < nbins) {
+        if (a[i] == b[j]) {
+            double ratio = (in_data[i] + fabs(min_value)) / fabs(max_value - min_value);
+            out_data[bins[j] - 1] = (int) (ratio * 255);
+            if (i < ndata_bins) ++i;
+            if (j < nbins) ++j;
+        } else if (a[i] > b[j] && j < 12) {
+            out_data[bins[j] - 1] = FILL_VALUE;
+            ++j;
+        } else {
+            ++i;
+        }
     }
-    free(data);
 }
