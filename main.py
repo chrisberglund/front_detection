@@ -91,6 +91,10 @@ def map_files(directory, latmin, latmax, lonmin, lonmax):
         df = pd.DataFrame({"Latitude": lats, "Longitude": lons, "Data":out_data})
         year_month = dataset.time_coverage_start[:7]
         date = dataset.time_coverage_start[:10]
+        if file.endswith("SNPP_CHL.nc"):
+            outfile = date + "viirs_chlor.csv"
+        else:
+        outfile = date + '_chlor.csv'
         dataset.close()
         if not os.path.exists(cwd + "/out/" + year_month):
             os.makedirs(cwd + "/out/" + year_month)
