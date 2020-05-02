@@ -131,5 +131,4 @@ void createFullBinArray(int totalBins, int nDataBins, int nrows, const int *data
             outData[dataBins[i] - 1] = (int) floor(ratio * 255);
         }
     }
-    free(meanData);
 }
