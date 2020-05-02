@@ -29,7 +29,7 @@ int get_window(int bin, int row, int width, const int *data, const int *n_bins_i
         int current_row = row - max_distance;
         int area = width * width;
         for (int i = 0; i < area; i += width) {   //Iterate through the first bins of each row in window
-            column_neighbor = (int) (ratio * n_bins_in_row[current_row] + 0.5) + basebins[current_row] + 1;
+            column_neighbor = (int) (ratio * n_bins_in_row[current_row] + 0.5) + basebins[current_row];
             for (int j = 0; j < width; j++) {
                 window[i + j] = data[column_neighbor + j - max_distance];
                 if (window[i+j] == FILL_VALUE)  nfill_values++;
@@ -61,7 +61,7 @@ void get_bin_window(int bin, int row, int width, const int *n_bins_in_row, const
         int current_row = row - max_distance;
         int area = width * width;
         for (int i = 0; i < area; i += width) {   //Iterate through the first bins of each row in window
-            column_neighbor = (int) (ratio * n_bins_in_row[current_row] + 0.5) + basebins[current_row] + 1;
+            column_neighbor = (int) (ratio * n_bins_in_row[current_row] + 0.5) + basebins[current_row];
             for (int j = 0; j < width; j++) {
                 window[i + j] = column_neighbor + j - max_distance;
             }

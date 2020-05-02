@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 from multiprocessing import Pool, cpu_count
 
-
 def sied(df, nbins, nrows, nbins_in_row, basebins):
     """
     Performs the Belkin-O'Reilly front detection algorithm on the provided bins
@@ -21,8 +20,9 @@ def sied(df, nbins, nrows, nbins_in_row, basebins):
     :return: pandas dataframe containing bin values of each bin resulting from edge detection algorithm
     """
     _cayula = ctypes.CDLL('./sied.so')
-    data = (ctypes.c_int * nbins)(df["Data"].tolist())
-    out_data = (ctypes.c_int * nbins)
+    data = (ctypes.c_int * nbins)(*df["Data"].tolist())
+    print(data[0])
+    out_data = (ctypes.c_int * nbins)()
     _cayula.cayula.argtypes = (ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int), ctypes.c_int,
                                ctypes.c_int, ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int))
     _cayula.cayula(data, out_data, nbins, nrows, nbins_in_row, basebins)
@@ -30,7 +30,7 @@ def sied(df, nbins, nrows, nbins_in_row, basebins):
     return df
 
 
-def renumber_bins(lats, lons, rows, bins, min_lat=-90, max_lat=90, min_lon=-180, max_lon=180):
+def renumber_bins(lats, lons, rows, bins, data, min_lat=-90, max_lat=90, min_lon=-180, max_lon=180):
     """
     Takes coordinates for the original bins and crops to provided extent. Each bin is assigned a new number so that
     the subset of bins begins with 1.
@@ -48,14 +48,17 @@ def renumber_bins(lats, lons, rows, bins, min_lat=-90, max_lat=90, min_lon=-180,
         dataframe: Dataframe containing the original bin information as well as the new bin numbers
     """
     lons = np.array(lons)
+    """
     if min_lon > 0 and max_lon < 0:
         min_lon -= 360
         lons[lons > 0] -= 360
-    df = pd.DataFrame(data={"Latitude": list(lats), "Longitude": lons, "Row": list(rows), "Bin": list(bins)})
+        """
+    df = pd.DataFrame(data={"Latitude": list(lats), "Longitude": lons, "Data":data,"Row": list(rows), "Bin": list(bins)})
     df = df[(df["Latitude"] >= min_lat) & (df["Latitude"] <= max_lat) & (df["Longitude"] >= min_lon) & (
-            df["Longitude"] <= max_lon)].sort_values(
-        ["Latitude", "Longitude"])
-    df["New_Bin"] = np.arange(1, len(df)+1, 1)
+    df["Longitude"] <= max_lon)].sort_values("Bin")
+    df = df.sort_values("Bin")
+    df["New_Bin"] = np.arange(len(df))
+
     return df
 
 class DATA(ctypes.Structure):
@@ -77,21 +80,23 @@ def crop(values, data_bins, total_bins, nrows, chlora):
                                    ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int), ctypes.c_bool)
     lats = (ctypes.c_double * total_bins)()
     lons = (ctypes.c_double * total_bins)()
-    out_bins = (ctypes.c_int * total_bins)()
+    bins = (ctypes.c_int * total_bins)()
     out_rows = (ctypes.c_int * total_bins)()
+
     _cayula.define(lats, lons, out_rows, out_bins, nrows, total_bins)
-    df = renumber_bins(lats, lons, out_rows, out_bins, min_lat=10, max_lat=70, min_lon=20, max_lon=-110)
-    bins = df["New_Bin"].tolist()
+    data_bins = (ctypes.c_int * len(data_bins))(*data_bins)
+    in_data = (ctypes.c_int * len(bins))(*values)
+    out_data = (ctypes.c_int * len(bins))()
+
+    _cayula.initialize(in_data, out_data, len(bins), len(values), total_bins, data_bins, bins, chlora)
+
+    df = renumber_bins(lats, lons, out_rows, bins, out_data, min_lat=10, max_lat=70, min_lon=-180, max_lon=-110)
+    nrows = len(df.groupby("Row").count()["Latitude"])
+
     nrows = len(df.groupby("Row").count()["Latitude"])
     nbins_in_row = (ctypes.c_int * nrows)(*df.groupby("Row").count()["Latitude"].tolist())
     basebins = (ctypes.c_int * nrows)(*df.drop_duplicates("Row")["New_Bin"].tolist())
-    in_data = (ctypes.c_int * len(bins))(*values)
-    out_data = (ctypes.c_int * len(bins))()
-    bins = (ctypes.c_int * len(bins))(*bins)
-    data_bins = (ctypes.c_int * len(data_bins))(*data_bins)
-    _cayula.initialize(in_data, len(bins), len(values), total_bins, data_bins, bins, chlora)
-    df["Data"] = out_data
-    print("test")
+
     return df, nrows, nbins_in_row, basebins
 
 
@@ -130,11 +135,8 @@ def map_bins(dataset, latmin, latmax, lonmin, lonmax, glob):
     else:
         total_bins, nrows, bins, data, date = get_params_modis(dataset, "chlor_a")
         rows = []
-    df, nrows, nbins_in_row, basebins = crop(data, bins, total_bins, nrows, True)
-    # df = sied(total_bins, nrows, -999, rows, bins, data, weights, date, True, glob)
-    df = df[(df.Latitude >= latmin) & (df.Latitude <= latmax) &
-            (df.Longitude >= lonmin) & (df.Longitude <= lonmax)]
-    df = sied(df, len(df), nrows, nbins_in_row, basebins)
+    df, nrows, nbins_in_row, basebins = crop(data, weights, bins, total_bins, nrows, True)
+    df = sied(df, df.shape[0], nrows, nbins_in_row, basebins)
     df = df[df['Data'] > -999]
     return df
 
@@ -194,7 +196,7 @@ def map_files(directory, latmin, latmax, lonmin, lonmax):
 
 def main():
     cwd = os.getcwd()
-    map_files(cwd + "/input", -80, 80, -180, 0)
+    map_files(cwd + "/input", -60, 60, -180, 0)
 
 
 if __name__ == "__main__":

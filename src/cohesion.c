@@ -32,9 +32,10 @@ static inline int max(int a, int b) {
  *      int: 1 if the threshold results in cohesive groups 0 if it does not
  */
 int cohesive(const int *window, int threshold) {
-    int area = squarei(WINDOW_WIDTH);
-    int copy[area];
-    for (int i = 0; i < area; i++) {
+    int copy[1024] = {0};
+
+
+    for (int i = 0; i < 1024; i++) {
         copy[i] = window[i] == FILL_VALUE ? FILL_VALUE : window[i] >= threshold;
     }
     double r1 = 0, t1 = 0, r2 = 0, t2 = 0;
@@ -111,7 +112,7 @@ int neighbor_is_different(const int *window, int row, int col) {
  *
  */
 void find_edge(const int *window, int *out, int threshold) {
-    int bodies[squarei(WINDOW_WIDTH)];
+    int bodies[1024];
     for (int i = 0; i < squarei(WINDOW_WIDTH); i++) {
         bodies[i] = window[i] == FILL_VALUE ? FILL_VALUE : window[i] >= threshold;
     }
