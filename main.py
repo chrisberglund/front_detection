@@ -5,20 +5,26 @@ import numpy as np
 import pandas as pd
 from multiprocessing import Pool, cpu_count
 
+
 def initialize(nbins, nrows, min_lat, min_lon, max_lat, max_lon):
     _cayula = ctypes.CDLL('./sied.so')
-    _cayula.aoi_bins_length.argtypes(ctypes.c_int, ctypes.c_int, ctypes.c_double, ctypes.c_double, ctypes.c_double, ctypes.c_double)
-    _cayula.get_latlon.argtypes(ctypes.c_int, ctypes.c_int, ctypes.c_double, ctypes.c_double, ctypes.c_double, ctypes.c_double,
-                                ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_double),
+    _cayula.aoi_bins_length.argtypes = (ctypes.c_int, ctypes.c_int, ctypes.c_double, ctypes.c_double, ctypes.c_double, ctypes.c_double)
+    _cayula.aoi_rows_length.argtypes = (ctypes.c_int, ctypes.c_double, ctypes.c_double)
+    _cayula.get_latlon.argtypes = (ctypes.c_int, ctypes.c_int, ctypes.c_double, ctypes.c_double, ctypes.c_double,
+                                ctypes.c_double,
+                                ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int),
+                                ctypes.POINTER(ctypes.c_double),
                                 ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_int))
     num_aoi_bins = _cayula.aoi_bins_length(nbins, nrows, min_lat, min_lon, max_lat, max_lon)
-    num_aoi_rows = _cayula.aoi_rows.length(nrows, min_lat, max_lat)
+    num_aoi_rows = _cayula.aoi_rows_length(nrows, min_lat, max_lat)
+
     lats = (ctypes.c_double * num_aoi_bins)()
     lons = (ctypes.c_double * num_aoi_bins)()
     basebins = (ctypes.c_int * num_aoi_rows)()
     nbins_in_row = (ctypes.c_int * num_aoi_rows)()
     aoi_bins = (ctypes.c_int * num_aoi_bins)()
-    _cayula.getlatlon(nbins, nrows, min_lat, min_lon, max_lat, max_lon, basebins, nbins_in_row, lats, lons, aoi_bins)
+    _cayula.get_latlon(nbins, nrows, min_lat, min_lon, max_lat, max_lon, basebins, nbins_in_row, lats, lons, aoi_bins)
+
     return basebins, nbins_in_row, lats, lons, num_aoi_rows, num_aoi_bins, aoi_bins
 
 
@@ -33,28 +39,31 @@ def get_params_modis(dataset, data_str):
     total_bins = np.array(dataset.groups["level-3_binned_data"]["BinIndex"][:].tolist())[:, 3].sum()
     nrows = len(dataset.groups["level-3_binned_data"]["BinIndex"])
     binlist = np.array(dataset["level-3_binned_data"]["BinList"][:].tolist())
-    bins = binlist[:, 0].astype("int")
+    bins = binlist[:, 0].astype("int") - 1
     weights = binlist[:, 3]
     sums = np.array(dataset.groups["level-3_binned_data"][data_str][:].tolist())[:, 0]
-    data = np.log10(sums/weights)
+    data = np.log10(sums / weights)
     date = dataset.time_coverage_start
 
     return total_bins, nrows, bins, data, date
 
+
 def sied(data, nbins, nrows, ndata_bins, data_bins, aoi_bins, basebins, nbins_in_row):
     _cayula = ctypes.CDLL('./sied.so')
-    _cayula.initialize.argtypes(ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_int),
-                                ctypes.c_int, ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int))
-    in_data = (ctypes.c_int * ndata_bins)(*data)
+    _cayula.initialize.argtypes = (ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_int),
+                                ctypes.c_int, ctypes.c_int, ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int))
+    in_data = (ctypes.c_double * ndata_bins)(*data)
     out_data = (ctypes.c_int * nbins)()
     data_bins = (ctypes.c_int * ndata_bins)(*data_bins)
     _cayula.initialize(in_data, out_data, nbins, ndata_bins, data_bins, aoi_bins)
-    _cayula.cayula.argtypes(ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int),
+    _cayula.cayula.argtypes = (ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int),
                             ctypes.c_int, ctypes.c_int, ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int))
+
     in_data = out_data
     out_data = (ctypes.c_int * nbins)()
     _cayula.cayula(in_data, out_data, nbins, nrows, nbins_in_row, basebins)
     return list(out_data)
+
 
 def map_files(directory, latmin, latmax, lonmin, lonmax):
     """
@@ -66,7 +75,7 @@ def map_files(directory, latmin, latmax, lonmin, lonmax):
     :param lonmin: minimum longitude to include in output
     :param lonmax: maximum longitude to include in output
     """
-    cwd =  os.getcwd()
+    cwd = os.getcwd()
     files = []
     outfiles = []
     if not os.path.exists(cwd + "/out"):
@@ -81,20 +90,23 @@ def map_files(directory, latmin, latmax, lonmin, lonmax):
             files.append(directory + "/" + file)
 
     dataset = Dataset(files[0])
-    total_bins, nrows, data_bins, data, date = get_params_modis(dataset, "chlor_a")
-    basebins, nbins_in_row, lats, lons, num_aoi_rows, num_aoi_bins,  aoi_bins = initialize(len(total_bins), nrows, 20, -180, 80, -110)
+    ntotal_bins, nrows, data_bins, data, date = get_params_modis(dataset, "chlor_a")
+    basebins, nbins_in_row, lats, lons, num_aoi_rows, num_aoi_bins, aoi_bins = initialize(ntotal_bins, nrows, 20., -180.,
+                                                                                          80., -110.)
     dataset.close()
     for file in files:
         dataset = Dataset(file)
-        total_bins, nrows, data_bins, data, date = get_params_modis(dataset, "chlor_a")
-        out_data = sied(data, num_aoi_bins, num_aoi_rows, len(data_bins), aoi_bins, basebins, nbins_in_row)
-        df = pd.DataFrame({"Latitude": lats, "Longitude": lons, "Data":out_data})
+        ntotal_bins, nrows, data_bins, data, date = get_params_modis(dataset, "chlor_a")
+
+        out_data = sied(data, num_aoi_bins, num_aoi_rows, len(data_bins), data_bins, aoi_bins, basebins, nbins_in_row)
+        df = pd.DataFrame({"Latitude": list(lats), "Longitude": list(lons), "Data": out_data})
+        df = df[df["Data"] > -999]
         year_month = dataset.time_coverage_start[:7]
         date = dataset.time_coverage_start[:10]
         if file.endswith("SNPP_CHL.nc"):
             outfile = date + "viirs_chlor.csv"
         else:
-        outfile = date + '_chlor.csv'
+            outfile = date + '_chlor.csv'
         dataset.close()
         if not os.path.exists(cwd + "/out/" + year_month):
             os.makedirs(cwd + "/out/" + year_month)
