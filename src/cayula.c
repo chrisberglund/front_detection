@@ -29,10 +29,9 @@ void cayula(int *data, int *out_data, int n_bins, int nrows, int *n_bins_in_row,
     int *bin_window = malloc(WINDOW_AREA * sizeof(int));
     for (int i = half_step - 1; i < nrows - half_step; i += half_step) {
         for (int j = half_step - 1; j < n_bins_in_row[i] - half_step; j += half_step) {
-            if (n_bins_in_row[i - half_step] < WINDOW_WIDTH || n_bins_in_row[i + half_step] < WINDOW_WIDTH) {
+            if (n_bins_in_row[i - WINDOW_WIDTH + 1] < WINDOW_WIDTH || n_bins_in_row[i + WINDOW_WIDTH] < WINDOW_WIDTH) {
                 continue;
             }
-            printf("%d \n", n_bins_in_row[i]);
             get_window(basebins[i] + j, i, WINDOW_WIDTH, filtered_data, n_bins_in_row, basebins, window);
             int threshold = histogram_analysis(window);
             if (threshold > 0) {

@@ -39,7 +39,7 @@ int aoi_rows_length(int nrows, double min_lat, double max_lat) {
 void get_latlon(int nbins, int nrows, double min_lat, double min_lon, double max_lat, double max_lon, int *basebins,
         int *nbins_in_row, double *lats, double *lons, int *bins) {
     int aoi_bin = 0;
-    int bin = 1;
+    int bin = 0;
     int row = 0;
     for (int i = 0; i < nrows; i++) {
         double row_lat = (i + 0.5) * 180. / nrows - 90;
@@ -65,6 +65,19 @@ void get_latlon(int nbins, int nrows, double min_lat, double min_lon, double max
     }
 }
 
+int binary_search(int *arr, int l, int r, int x)
+{
+    if (r >= l) {
+        int mid = l + (r - l) / 2;
+        if (arr[mid] == x)
+            return mid;
+        if (arr[mid] > x)
+            return binary_search(arr, l, mid - 1, x);
+
+        return binary_search(arr, mid + 1, r, x);
+    }
+    return -1;
+}
 
 /*
  * Function:  initialize
@@ -80,8 +93,7 @@ void get_latlon(int nbins, int nrows, double min_lat, double min_lon, double max
  *      int *bins: pointer to an array containing the bin number for all bins in the area of interest
  */
 
-void initialize(int *in_data, int *out_data, int nbins, int ndata_bins, int *data_bins, const int *bins) {
-    int i = 0, j = 0;
+void initialize(double *in_data, int *out_data, int nbins, int ndata_bins, int *data_bins, const int *bins) {
     double min_value = 999.;
     double max_value = -999.;
     for (int k = 0; k < ndata_bins; k++) {
@@ -92,21 +104,13 @@ void initialize(int *in_data, int *out_data, int nbins, int ndata_bins, int *dat
         }
     }
 
-    while (j < nbins) {
-        if (data_bins[i] == bins[j]) {
-            double ratio = (double)(in_data[i] + fabs(min_value)) / fabs(max_value - min_value);
-            out_data[j] = (int) (ratio * 255);
-            if (i < ndata_bins - 1) i++;
-            j++;
-        } else if (data_bins[i] > bins[j]) {
-            out_data[j] = FILL_VALUE;
-            j++;
+    for (int i = 0; i < nbins; i++) {
+        int idx = binary_search(data_bins, 0, ndata_bins, bins[i]);
+        if (idx == -1) {
+            out_data[i] = FILL_VALUE;
         } else {
-            if (i == ndata_bins - 1) {
-                break;
-            } else {
-                i++;
-            }
+            double ratio = (double)(in_data[idx] + fabs(min_value)) / fabs(max_value - min_value);
+            out_data[i] = (int) (ratio * 255);
         }
     }
 }

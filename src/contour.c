@@ -159,9 +159,9 @@ Contour * del_contour(Contour *n) {
     Contour *next = n->next;
     while (c->next != NULL) c = c->next;
     while (c->prev != NULL) {
-        ContourPoint *tmp = c->prev;
-        free(c);
-        c = tmp;
+        ContourPoint *tmp = c;
+        c = c->prev;
+        free(tmp);
     }
     if (n->prev != NULL) {
         if (n->next != NULL) {
@@ -442,11 +442,11 @@ void contour(int *data, int *filtered_data, int *out_data, int nbins, int nrows,
             head = del_contour(head);
         } else {
             ContourPoint *point = head->first_point;
-            while (point->next != NULL) {
+            while (point != NULL) {
                 out_data[point->bin] = 1;
-                ContourPoint *tmp = point->next;
-                free(point);
-                point = tmp;
+                ContourPoint *tmp = point;
+                point = point->next;
+                free(tmp);
             }
             Contour *tmp_contour = head;
             head = head->next;
