@@ -6,6 +6,15 @@ typedef struct contour_point {
     struct contour_point *prev;
     struct contour_point *next;
 } ContourPoint;
+
+struct contour {
+    struct contour_point *first_point;
+    struct contour *prev;
+    struct contour *next;
+    int length;
+} typedef Contour;
+
+Contour * del_contour(Contour *n);
 double gradient_ratio(const int *window);
 ContourPoint * new_contour_point(ContourPoint *prev, int bin, int angle);
 ContourPoint * find_best_front(ContourPoint *prev, const int *data,  int row, const int *basebins, const int *nbins_in_row);

@@ -18,13 +18,6 @@ const int ANGLES[9] = {135, 90, 45,
                        180, 360, 0,
                        225, 270, 315};
 
-struct contour {
-    struct contour_point *first_point;
-    struct contour *prev;
-    struct contour *next;
-    int length;
-} typedef Contour;
-
 struct vector{
     double x;
     double y;
@@ -132,6 +125,7 @@ double gradient_ratio(const int *window) {
      Contour *n = malloc(sizeof(Contour));
      n->prev = prev;
      n->next = NULL;
+     n->length = 0;
 
      if (prev != NULL) prev -> next = n;
 
@@ -164,13 +158,13 @@ Contour * del_contour(Contour *n) {
         free(tmp);
     }
     if (n->prev != NULL) {
-        if (n->next != NULL) {
-            n->prev->next = n->next;
-        } else {
-            n->prev = NULL;
-        }
+        n->prev->next = n->next;
+    }
+    if (n->next != NULL) {
+        n->next->prev = n->prev;
     }
     free(n);
+
     return next;
 }
 

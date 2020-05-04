@@ -29,6 +29,52 @@ void test_contour_new_contour_point(void) {
     free(new_point);
 }
 
+void test_contour_del_contour(void) {
+    Contour *c1 = malloc(sizeof(Contour));
+    c1->prev = NULL;
+    c1->length = 12;
+    c1->first_point = NULL;
+    Contour *c2 = malloc(sizeof(Contour));
+    c1->next = c2;
+    c2->prev = c1;
+    c2->length = 10;
+    ContourPoint *point1 = malloc(sizeof(ContourPoint));
+    point1->bin = 10;
+    point1->prev = NULL;
+    point1->angle = 0;
+
+    ContourPoint *point2 = malloc(sizeof(ContourPoint));
+    point2->bin = 10;
+    point2->prev = point1;
+    point2->angle = 0;
+    point1->next = point2;
+
+    ContourPoint *point3 = malloc(sizeof(ContourPoint));
+    point3->bin = 10;
+    point3->prev = point2;
+    point3->angle = 0;
+    point2->next = point3;
+
+    ContourPoint *point4 = malloc(sizeof(ContourPoint));
+    point4->bin = 10;
+    point4->prev = point3;
+    point4->angle = 0;
+    point4->next = NULL;
+
+    c2->first_point = point1;
+
+    Contour *c3 = malloc(sizeof(Contour));
+    c2->next = c3;
+    c3->prev = c2;
+    c3->length = 4;
+    c3->first_point=NULL;
+
+    c2 = del_contour(c2);
+    TEST_ASSERT_EQUAL_PTR(c2, c3);
+    TEST_ASSERT_EQUAL_PTR(c1->next, c3);
+    TEST_ASSERT_EQUAL_PTR(c3->prev, c1);
+}
+
 
 void test_contour_find_best_front(void) {
     int data[81] = {
