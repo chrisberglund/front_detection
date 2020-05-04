@@ -151,12 +151,11 @@ double gradient_ratio(const int *window) {
 Contour * del_contour(Contour *n) {
     ContourPoint *c = n->first_point;
     Contour *next = n->next;
-    while (c->next != NULL) c = c->next;
-    while (c->prev != NULL) {
+    while (c != NULL) {
         ContourPoint *tmp = c;
-        c = c->prev;
+        c = c->next;
         free(tmp);
-    }
+    };
     if (n->prev != NULL) {
         n->prev->next = n->next;
     }
