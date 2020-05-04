@@ -431,19 +431,13 @@ void contour(int *data, int *filtered_data, int *out_data, int nbins, int nrows,
     }
     free(pixel_in_contour);
     while (head != NULL) {
-        if (head->length < 15) {
-            head = del_contour(head);
-        } else {
+        if (head->length >= 15) {
             ContourPoint *point = head->first_point;
             while (point != NULL) {
                 out_data[point->bin] = 1;
-                ContourPoint *tmp = point;
                 point = point->next;
-                free(tmp);
             }
-            Contour *tmp_contour = head;
-            head = head->next;
-            free(tmp_contour);
         }
+        head = del_contour(head);
     }
 }
