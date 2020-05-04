@@ -1,5 +1,6 @@
 #include "helpers.h"
 #include "cayula.h"
+#include <stdio.h>
 
 /*
  * Function:  get_window
@@ -23,15 +24,15 @@ int get_window(int bin, int row, int width, const int *data, const int *n_bins_i
                 const int *basebins, int window[]) {
     int nfill_values = 0;
     int column_neighbor;
-    double ratio = (bin - basebins[row]) / (double) n_bins_in_row[row];
+    double ratio = ((double) bin - basebins[row]) /  n_bins_in_row[row];
     if (width % 2 == 0) {
         int max_distance = width >> 1;
-        int current_row = row - max_distance;
+        int current_row = row - max_distance + 1;
         int area = width * width;
         for (int i = 0; i < area; i += width) {   //Iterate through the first bins of each row in window
             column_neighbor = (int) (ratio * n_bins_in_row[current_row] + 0.5) + basebins[current_row];
             for (int j = 0; j < width; j++) {
-                window[i + j] = data[column_neighbor + j - max_distance];
+                window[i + j] = data[column_neighbor + j - max_distance + 1];
                 if (window[i+j] == FILL_VALUE)  nfill_values++;
             }
             current_row++;
@@ -58,12 +59,12 @@ void get_bin_window(int bin, int row, int width, const int *n_bins_in_row, const
     double ratio = (bin - basebins[row]) / (double) n_bins_in_row[row];
     if (width % 2 == 0) {
         int max_distance = width >> 1;
-        int current_row = row - max_distance;
+        int current_row = row - max_distance + 1;
         int area = width * width;
         for (int i = 0; i < area; i += width) {   //Iterate through the first bins of each row in window
             column_neighbor = (int) (ratio * n_bins_in_row[current_row] + 0.5) + basebins[current_row];
             for (int j = 0; j < width; j++) {
-                window[i + j] = column_neighbor + j - max_distance;
+                window[i + j] = column_neighbor + j - max_distance + 1;
             }
             current_row++;
         }
@@ -74,7 +75,7 @@ void get_bin_window(int bin, int row, int width, const int *n_bins_in_row, const
         for (int i = 0; i < area; i += width) {   //Iterate through the first bins of each row in window
             column_neighbor = (int) (ratio * n_bins_in_row[current_row] + 0.5) + basebins[current_row];
             for (int j = 0; j < width; j++) {
-                window[i + j] = column_neighbor + j - max_distance;
+                window[i + j] = column_neighbor + j - max_distance + 1;
             }
             current_row++;
         }

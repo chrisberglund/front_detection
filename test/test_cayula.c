@@ -7,7 +7,6 @@
 #include "filter.h"
 #include "histogram.h"
 #include "initialize.h"
-#include "prefilter.h"
 
 void setUp(void)
 {
