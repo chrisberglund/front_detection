@@ -62,7 +62,7 @@ def sied(data, nbins, nrows, ndata_bins, data_bins, aoi_bins, basebins, nbins_in
     in_data = out_data
     out_data = (ctypes.c_int * nbins)()
     _cayula.cayula(in_data, out_data, nbins, nrows, nbins_in_row, basebins)
-    return list(out_data)
+    return np.array(out_data, dtype="int8")
 
 
 def map_files(directory, latmin, latmax, lonmin, lonmax):
@@ -91,16 +91,18 @@ def map_files(directory, latmin, latmax, lonmin, lonmax):
 
     dataset = Dataset(files[0])
     ntotal_bins, nrows, data_bins, data, date = get_params_modis(dataset, "chlor_a")
-    basebins, nbins_in_row, lats, lons, num_aoi_rows, num_aoi_bins, aoi_bins = initialize(ntotal_bins, nrows, 20., -180.,
-                                                                                          80., -110.)
+    basebins, nbins_in_row, lats, lons, num_aoi_rows, num_aoi_bins, aoi_bins = initialize(ntotal_bins, nrows, -80., -180.,
+                                                                                       80., 180.)
+    lats = np.array(lats)
+    lons = np.array(lons)
     dataset.close()
     for file in files:
         dataset = Dataset(file)
         ntotal_bins, nrows, data_bins, data, date = get_params_modis(dataset, "chlor_a")
 
         out_data = sied(data, num_aoi_bins, num_aoi_rows, len(data_bins), data_bins, aoi_bins, basebins, nbins_in_row)
-        df = pd.DataFrame({"Latitude": list(lats), "Longitude": list(lons), "Data": out_data})
-        df = df[df["Data"] > -999]
+        df = pd.DataFrame({"Latitude": lats, "Longitude": lons, "Data": out_data})
+        df = df[df["Data"] > -1]
         year_month = dataset.time_coverage_start[:7]
         date = dataset.time_coverage_start[:10]
         if file.endswith("SNPP_CHL.nc"):
