@@ -86,7 +86,19 @@ def map_files(directory, latmin, latmax, lonmin, lonmax):
                 outfiles.append(file)
     outfiles.sort()
     for file in os.listdir(directory):
-        if file.endswith(".nc"):
+        if 'ENVISAT' in file:
+            year = file[17:21] + '-' + file[21:23] + '-' + file[23:25] + 'meris_chlor.csv'
+        elif 'A20' in file:
+            dataset = Dataset(directory + '/' + file)
+            date = dataset.time_coverage_start[:10]
+            year = date + '_chlor.csv'
+            dataset.close()
+        elif 'V20' in file:
+            dataset = Dataset(directory + '/' + file)
+            date = dataset.time_coverage_start[:10]
+            year = date + 'viirs_chlor.csv'
+            dataset.close()
+        if file.endswith(".nc") and year not in outfiles:
             files.append(directory + "/" + file)
 
     dataset = Dataset(files[0])
@@ -103,16 +115,21 @@ def map_files(directory, latmin, latmax, lonmin, lonmax):
         out_data = sied(data, num_aoi_bins, num_aoi_rows, len(data_bins), data_bins, aoi_bins, basebins, nbins_in_row)
         df = pd.DataFrame({"Latitude": lats, "Longitude": lons, "Data": out_data})
         df = df[df["Data"] > -1]
-        year_month = dataset.time_coverage_start[:7]
+        year_month = dataset.time_coverage_start[:4]
         date = dataset.time_coverage_start[:10]
-        if file.endswith("SNPP_CHL.nc"):
+        if "SNPP" in file:
             outfile = date + "viirs_chlor.csv"
+        elif "SEASTAR" in file:
+            outfile = date + "seawifs_chlor.csv"
+        elif "ENVISAT_MERIS" in file:
+            outfile = date + "meris_chlor.csv"
         else:
             outfile = date + '_chlor.csv'
         dataset.close()
         if not os.path.exists(cwd + "/out/" + year_month):
             os.makedirs(cwd + "/out/" + year_month)
         df.to_csv(cwd + "/out/" + year_month + "/" + outfile, index=False)
+        print("Saving " + outfile)
 
 
 def main():
