@@ -8,6 +8,5 @@ CMakeLists.txt
 /test.r
 input/
 freq/
-/freq.py
 *.csv
 kud/

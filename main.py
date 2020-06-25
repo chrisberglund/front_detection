@@ -148,8 +148,7 @@ def map_bins(dataset, latmin, latmax, lonmin, lonmax, glob):
     else:
         total_bins, nrows, bins, data, weights, date = get_params_modis(dataset, "chlor_a")
         rows = []
-    df = crop(data, weights, bins, total_bins, nrows, True)
-    # df = sied(total_bins, nrows, -999, rows, bins, data, weights, date, True, glob)
+    df = sied(total_bins, nrows, -999, rows, bins, data, weights, date, True, glob)
     print("Cropping")
     df = df[(df.Latitude >= latmin) & (df.Latitude <= latmax) &
             (df.Longitude >= lonmin) & (df.Longitude <= lonmax)]
