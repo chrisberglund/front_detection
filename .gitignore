@@ -10,3 +10,13 @@ input/
 freq/
 *.csv
 kud/
+build/
+test/support
+test/unity.c
+test/unity.h
+test/unity_internals.h
+test_filter.out.stackdump
+test_helpers.out.stackdump
+test_histogram.out.stackdump
+test_cohesion.out.stackdump
+test_contour.out.stackdump

@@ -1,51 +1,129 @@
-#include <stdbool.h>
-#include <stdlib.h>
 #include "cohesion.h"
+#include "cayula.h"
+#include <stdio.h>
 
 #define CRIT_C1 0.90
 #define CRIT_C2 0.90
 #define CRIT_C 0.92
 
-/**
- * Checks the cohesiveness of a window that has a detected threshold. Compares each pixel in the window with all of its
- * neighbors and counts the ratio between neighbors that are in the same group and the total number of neighbors
- * @param window pointer to the first element of an array containing the data values for each pixel
- * @param width the width of the window
- * @param threshold the threshold detected with the the histogram method
- * @return true if the window has sufficiently high cohesion coefficients
+static inline int squarei(int a) {
+    return a * a;
+}
+
+static inline int min(int a, int b) {
+    return a < b ? a : b;
+}
+
+static inline int max(int a, int b) {
+    return a > b ? a : b;
+}
+
+/*
+ * Function:  cohesive
+ * --------------------
+ * Determines if the two groups in the window divided separated by the given threshold is sufficiently cohesive.
+ * Compares each bin to its neighbors to see if members of each group are near other members.
+ *
+ * args:
+ *      int *window: pointer to an array containing the data window
+ *      int threshold: the threshold to separate the two groups by
+ *
+ * returns:
+ *      int: 1 if the threshold results in cohesive groups 0 if it does not
  */
-bool isCohesive(const int *window, int width, int threshold) {
-    int *copy = malloc(width * width * sizeof(int));
-    for (int i = 0; i < width * width; i++) {
-        copy[i] = window[i] >= threshold;
+int cohesive(const int *window, int threshold) {
+    int copy[1024] = {0};
+
+
+    for (int i = 0; i < 1024; i++) {
+        copy[i] = window[i] == FILL_VALUE ? FILL_VALUE : window[i] >= threshold;
     }
-    double r1 = 0;
-    double t1 = 0;
-    double r2 = 0;
-    double t2 = 0;
-    for (int i = 1; i < width - 1; i++) {
-        for (int j = 1; j < width - 1; j++) {
-            if (copy[i * width + j] == 0 ) {
-                t1 += 8;
-            } else if (copy[i * width + j] == 1) {
-                t2 += 8;
-            }
-            for (int k = 0; k < 3; k ++) {
-                for (int m = 0; m < 3; m ++) {
-                    if (k == 1 && m == 1) {
-                        continue;
+    double r1 = 0, t1 = 0, r2 = 0, t2 = 0;
+    for (int i = 0; i < WINDOW_WIDTH; i++) {
+        for (int j = 0; j < WINDOW_WIDTH; j++) {
+            int sum = 0;
+            int count = 0;
+            if (copy[i * WINDOW_WIDTH + j] != FILL_VALUE) {
+                for (int k = max(i - 1, 0); k < min(i + 2, WINDOW_WIDTH); k++) {
+                    for (int l = max(j - 1, 0); l < min(j + 2, WINDOW_WIDTH); l++) {
+                        if (k != i && l != j && copy[k * WINDOW_WIDTH + l] != FILL_VALUE) {
+                            sum += copy[k * WINDOW_WIDTH + l];
+                            count++;
+                        }
                     }
-                    if (copy[i * width + j] == 0 && copy[(i + k - 1) * width + (j + m - 1)] == 0)
-                        r1++;
-                    else if (copy[i * width + j] == 1 && copy[(i + k - 1) * width + (j + m - 1)] == 1)
-                        r2++;
+                }
+                if (copy[i * WINDOW_WIDTH + j] == 0) {
+                    r1 += count - sum;
+                    t1 += count;
+                } else {
+                    r2 += sum;
+                    t2 += count;
                 }
             }
         }
     }
-    double c1 = r1/t1;
-    double c2 = r2/t2;
     double c = (r1 + r2)/(t1 + t2);
-    free(copy);
-    return (c1 >= CRIT_C1 && c2 >= CRIT_C2 && c >= CRIT_C);
+    return (r1/t1 >= CRIT_C1 && r2/t2 >= CRIT_C2 && c >= CRIT_C);
+}
+
+/*
+ * Function:  neighbor_is_different
+ * --------------------
+ * Determines if any of the neighbors of the given element are of a different group than the element. For example,
+ * if the element identified by its indices is below the threshold, this function checks to see if any of its neighbors
+ * are above the threshold. This function ignores any neighbors that contain a fill value.
+ *
+ * args:
+ *      int *window: pointer to an array containing the data. Elements should be 0 if they are below the threshold
+ *      and 1 if they are above the threshold
+ *      int row: the row the element of interest can be found in
+ *      int col: the column the element of interest can be found in
+ *
+ * returns:
+ *      int: 1 if at least one of the neighbors is different and 0 if all of its valid neighbors are the same
+ */
+int neighbor_is_different(const int *window, int row, int col) {
+    int center = window[row * WINDOW_WIDTH + col];
+    for (int i = max(row - 1, 0); i < min(row + 2, WINDOW_WIDTH); i++) {
+        for (int j = max(col - 1, 0); j < min(col + 2, WINDOW_WIDTH); j++) {
+            if (window[i * WINDOW_WIDTH + j] != FILL_VALUE && center != window[i * WINDOW_WIDTH + j]) {
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
+
+/*
+ * Function:  find_edge
+ * --------------------
+ * Implementation of the window-level processing portion of the "Location of Edge Pixels" step of the algorithm.
+ * This function looks for any pixel that has a neighbor that is on the opposite side of the threshold from itself.
+ * If a pixel has a different neighbor, it is designated as an edge pixel. Any pixels containing a fill value are
+ * ignored and is set to 0.
+ *
+ * args:
+ *      int *window: pointer to an array containing the data window to perform the detection on. Should be of
+ *      WINDOW_WIDTH^2 length
+ *      int *out: pointer to an array of same size as the input array to which to write the output values. Edge
+ *      pixels will have a value of 1 while non-edge pixels will have a value of 0.
+ *      int threshold: threshold value of the window determined by earlier steps of the algorithm
+ *
+ */
+void find_edge(const int *window, int *out, int threshold) {
+    int bodies[1024];
+    for (int i = 0; i < squarei(WINDOW_WIDTH); i++) {
+        bodies[i] = window[i] == FILL_VALUE ? FILL_VALUE : window[i] >= threshold;
+    }
+
+    for (int i = 0; i < WINDOW_WIDTH; i++) {
+        for (int j = 0; j < WINDOW_WIDTH; j++) {
+            if (bodies[i * WINDOW_WIDTH + j] != FILL_VALUE) {
+                out[i * WINDOW_WIDTH + j] = neighbor_is_different(bodies, i, j);
+            } else {
+                out[i * WINDOW_WIDTH + j] = 0;
+            }
+        }
+    }
 }
