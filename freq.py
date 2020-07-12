@@ -15,7 +15,7 @@ def front_frequency():
         for batch in files:
             df_list = [frequencies]
             for file in batch:
-                if any(x in file[5:7] for x in include_months):
+                if any(x in file[5:7] for x in include_months) and "meris" not in file and "viirs" not in file:
                     print(file)
                     df = pd.read_csv("./out/" + str(year) +"/" +  file)
                     df["Count"] = 1

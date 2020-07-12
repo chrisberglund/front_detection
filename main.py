@@ -42,7 +42,7 @@ def get_params_modis(dataset, data_str):
     bins = binlist[:, 0].astype("int") - 1
     weights = binlist[:, 3]
     sums = np.array(dataset.groups["level-3_binned_data"][data_str][:].tolist())[:, 0]
-    data = np.log10(sums / weights)
+    data = sums / weights
     date = dataset.time_coverage_start
 
     return total_bins, nrows, bins, data, date
@@ -88,29 +88,30 @@ def map_files(directory, latmin, latmax, lonmin, lonmax):
     for file in os.listdir(directory):
         if 'ENVISAT' in file:
             year = file[17:21] + '-' + file[21:23] + '-' + file[23:25] + 'meris_chlor.csv'
-        elif 'A20' in file:
-            dataset = Dataset(directory + '/' + file)
-            date = dataset.time_coverage_start[:10]
-            year = date + '_chlor.csv'
-            dataset.close()
         elif 'V20' in file:
             dataset = Dataset(directory + '/' + file)
             date = dataset.time_coverage_start[:10]
             year = date + 'viirs_chlor.csv'
             dataset.close()
-        if file.endswith(".nc") and year not in outfiles:
-            files.append(directory + "/" + file)
+        elif file.endswith(".nc"):
+            dataset = Dataset(directory + '/' + file)
+            date = dataset.time_coverage_start[:10]
+            year = date + '_sst.csv'
+            dataset.close()
+        if file.endswith(".nc"):
+            if year not in outfiles:
+                files.append(directory + "/" + file)
 
     dataset = Dataset(files[0])
-    ntotal_bins, nrows, data_bins, data, date = get_params_modis(dataset, "chlor_a")
-    basebins, nbins_in_row, lats, lons, num_aoi_rows, num_aoi_bins, aoi_bins = initialize(ntotal_bins, nrows, -80., -180.,
-                                                                                          80., 180.)
+    ntotal_bins, nrows, data_bins, data, date = get_params_modis(dataset, "sst4")
+    basebins, nbins_in_row, lats, lons, num_aoi_rows, num_aoi_bins, aoi_bins = initialize(ntotal_bins, nrows, 20., -180.,
+                                                                                          80., -110.)
     lats = np.array(lats)
     lons = np.array(lons)
     dataset.close()
     for file in files:
         dataset = Dataset(file)
-        ntotal_bins, nrows, data_bins, data, date = get_params_modis(dataset, "chlor_a")
+        ntotal_bins, nrows, data_bins, data, date = get_params_modis(dataset, "sst4")
 
         out_data = sied(data, num_aoi_bins, num_aoi_rows, len(data_bins), data_bins, aoi_bins, basebins, nbins_in_row)
         df = pd.DataFrame({"Latitude": lats, "Longitude": lons, "Data": out_data})
@@ -124,7 +125,7 @@ def map_files(directory, latmin, latmax, lonmin, lonmax):
         elif "ENVISAT_MERIS" in file:
             outfile = date + "meris_chlor.csv"
         else:
-            outfile = date + '_chlor.csv'
+            outfile = date + '_sst.csv'
         dataset.close()
         if not os.path.exists(cwd + "/out/" + year_month):
             os.makedirs(cwd + "/out/" + year_month)
