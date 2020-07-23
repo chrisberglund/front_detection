@@ -6,9 +6,9 @@ import pandas as pd
 from multiprocessing import Pool, cpu_count
 
 class edgeDetector:
-    _cayula = ctypes.CDLL('./sied.so')
 
     def __find_num_aoi_bins(self, nbins, nrows, min_lat, min_lon, max_lat, max_lon):
+        _cayula = ctypes.CDLL('./sied.so')
         _cayula.aoi_bins_length.argtypes = (ctypes.c_int, ctypes.c_int, ctypes.c_double, ctypes.c_double, ctypes.c_double, ctypes.c_double)
         _cayula.aoi_rows_length.argtypes = (ctypes.c_int, ctypes.c_double, ctypes.c_double)
         num_aoi_bins = _cayula.aoi_bins_length(nbins, nrows, min_lat, min_lon, max_lat, max_lon)
@@ -17,6 +17,7 @@ class edgeDetector:
         return num_aoi_bins, num_aoi_rows
 
     def __find_aoi_bins(self):
+        _cayula = ctypes.CDLL('./sied.so')
         _cayula.get_latlon.argtypes = (ctypes.c_int, ctypes.c_int, ctypes.c_double, ctypes.c_double, ctypes.c_double,
                                        ctypes.c_double,
                                        ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int),
@@ -27,7 +28,7 @@ class edgeDetector:
         lons = (ctypes.c_double * self.num_aoi_bins)()
         basebins = (ctypes.c_int * self.num_aoi_rows)()
         nbins_in_row = (ctypes.c_int * self.num_aoi_rows)()
-        aoi_bins = (ctypes.c_int * self.num_aoi_rows)()
+        aoi_bins = (ctypes.c_int * self.num_aoi_bins)()
         _cayula.get_latlon(self.nbins, self.nrows, self.min_lat, self.min_lon, self.max_lat, self.max_lon, basebins, nbins_in_row, lats, lons, aoi_bins)
         return lats, lons, basebins, nbins_in_row, aoi_bins
 
@@ -39,9 +40,11 @@ class edgeDetector:
         self.max_lat = max_lat
         self.max_lon = max_lon
         self.num_aoi_bins, self.num_aoi_rows = self.__find_num_aoi_bins(nbins, nrows, min_lat, min_lon, max_lat, max_lon)
+        print("test")
         self.lats, self.lons, self.basebins, self.nbins_in_row, self.aoi_bins = self.__find_aoi_bins()
 
     def sied(self, data, ndata_bins, data_bins):
+        _cayula = ctypes.CDLL('./sied.so')
         _cayula.initialize.argtypes = (ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_int),
                                        ctypes.c_int, ctypes.c_int,ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int))
         aoi_data = (ctypes.c_int * self.num_aoi_bins)()
