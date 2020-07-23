@@ -11,10 +11,10 @@ def initialize(nbins, nrows, min_lat, min_lon, max_lat, max_lon):
     _cayula.aoi_bins_length.argtypes = (ctypes.c_int, ctypes.c_int, ctypes.c_double, ctypes.c_double, ctypes.c_double, ctypes.c_double)
     _cayula.aoi_rows_length.argtypes = (ctypes.c_int, ctypes.c_double, ctypes.c_double)
     _cayula.get_latlon.argtypes = (ctypes.c_int, ctypes.c_int, ctypes.c_double, ctypes.c_double, ctypes.c_double,
-                                ctypes.c_double,
-                                ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int),
-                                ctypes.POINTER(ctypes.c_double),
-                                ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_int))
+                                   ctypes.c_double,
+                                   ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int),
+                                   ctypes.POINTER(ctypes.c_double),
+                                   ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_int))
     num_aoi_bins = _cayula.aoi_bins_length(nbins, nrows, min_lat, min_lon, max_lat, max_lon)
     num_aoi_rows = _cayula.aoi_rows_length(nrows, min_lat, max_lat)
 
@@ -42,7 +42,7 @@ def get_params_modis(dataset, data_str):
     bins = binlist[:, 0].astype("int") - 1
     weights = binlist[:, 3]
     sums = np.array(dataset.groups["level-3_binned_data"][data_str][:].tolist())[:, 0]
-    data = np.log10(sums / weights)
+    data = sums / weights
     date = dataset.time_coverage_start
 
     return total_bins, nrows, bins, data, date
@@ -51,18 +51,18 @@ def get_params_modis(dataset, data_str):
 def sied(data, nbins, nrows, ndata_bins, data_bins, aoi_bins, basebins, nbins_in_row):
     _cayula = ctypes.CDLL('./sied.so')
     _cayula.initialize.argtypes = (ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_int),
-                                ctypes.c_int, ctypes.c_int, ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int))
+                                   ctypes.c_int, ctypes.c_int, ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int))
     in_data = (ctypes.c_double * ndata_bins)(*data)
     out_data = (ctypes.c_int * nbins)()
     data_bins = (ctypes.c_int * ndata_bins)(*data_bins)
     _cayula.initialize(in_data, out_data, nbins, ndata_bins, data_bins, aoi_bins)
     _cayula.cayula.argtypes = (ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int),
-                            ctypes.c_int, ctypes.c_int, ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int))
+                               ctypes.c_int, ctypes.c_int, ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int))
 
     in_data = out_data
     out_data = (ctypes.c_int * nbins)()
     _cayula.cayula(in_data, out_data, nbins, nrows, nbins_in_row, basebins)
-    return list(out_data)
+    return np.array(out_data, dtype="int8")
 
 
 def map_files(directory, latmin, latmax, lonmin, lonmax):
@@ -86,31 +86,51 @@ def map_files(directory, latmin, latmax, lonmin, lonmax):
                 outfiles.append(file)
     outfiles.sort()
     for file in os.listdir(directory):
+        if 'ENVISAT' in file:
+            year = file[17:21] + '-' + file[21:23] + '-' + file[23:25] + 'meris_chlor.csv'
+        elif 'V20' in file:
+            dataset = Dataset(directory + '/' + file)
+            date = dataset.time_coverage_start[:10]
+            year = date + 'viirs_chlor.csv'
+            dataset.close()
+        elif file.endswith(".nc"):
+            dataset = Dataset(directory + '/' + file)
+            date = dataset.time_coverage_start[:10]
+            year = date + '_sst.csv'
+            dataset.close()
         if file.endswith(".nc"):
-            files.append(directory + "/" + file)
+            if year not in outfiles:
+                files.append(directory + "/" + file)
 
     dataset = Dataset(files[0])
     ntotal_bins, nrows, data_bins, data, date = get_params_modis(dataset, "sst4")
     basebins, nbins_in_row, lats, lons, num_aoi_rows, num_aoi_bins, aoi_bins = initialize(ntotal_bins, nrows, 20., -180.,
                                                                                           80., -110.)
+    lats = np.array(lats)
+    lons = np.array(lons)
     dataset.close()
     for file in files:
         dataset = Dataset(file)
         ntotal_bins, nrows, data_bins, data, date = get_params_modis(dataset, "sst4")
 
         out_data = sied(data, num_aoi_bins, num_aoi_rows, len(data_bins), data_bins, aoi_bins, basebins, nbins_in_row)
-        df = pd.DataFrame({"Latitude": list(lats), "Longitude": list(lons), "Data": out_data})
-        df = df[df["Data"] > -999]
-        year_month = dataset.time_coverage_start[:7]
+        df = pd.DataFrame({"Latitude": lats, "Longitude": lons, "Data": out_data})
+        df = df[df["Data"] > -1]
+        year_month = dataset.time_coverage_start[:4]
         date = dataset.time_coverage_start[:10]
-        if file.endswith("SNPP_CHL.nc"):
+        if "SNPP" in file:
             outfile = date + "viirs_chlor.csv"
+        elif "SEASTAR" in file:
+            outfile = date + "seawifs_chlor.csv"
+        elif "ENVISAT_MERIS" in file:
+            outfile = date + "meris_chlor.csv"
         else:
             outfile = date + '_sst.csv'
         dataset.close()
         if not os.path.exists(cwd + "/out/" + year_month):
             os.makedirs(cwd + "/out/" + year_month)
         df.to_csv(cwd + "/out/" + year_month + "/" + outfile, index=False)
+        print("Saving " + outfile)
 
 
 def main():

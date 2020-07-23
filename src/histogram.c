@@ -80,11 +80,14 @@ double within_group_variance(const int *histogram, double mu_low, double mu_high
  */
 int too_large(const int *histogram, int tau) {
     int sum = 0;
-    double area = (double) (WINDOW_WIDTH * WINDOW_WIDTH);
-    for (int i = 0; i < tau; i++) {
-        sum += histogram[i];
+    int count = 0;
+    for (int i = 0; i < 256; i++) {
+        if (i < tau) {
+            sum += histogram[i];
+        }
+        count += histogram[i];
     }
-    double ratio = sum / area;
+    double ratio = (double) sum / count;
     return (ratio < 0.25 ||  ratio > 0.75);
 }
 

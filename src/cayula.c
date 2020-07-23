@@ -15,7 +15,7 @@ void cayula(int *data, int *out_data, int n_bins, int nrows, int *n_bins_in_row,
 
     for (int i = 0; i < n_bins; i++) {
         if (data[i] == FILL_VALUE) {
-            out_data[i] = FILL_VALUE;
+            out_data[i] = -1;
         } else {
             out_data[i] = 0;
         }
