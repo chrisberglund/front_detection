@@ -98,7 +98,7 @@ int turn_too_sharp(ContourPoint *tail, int next_theta) {
  *      gradient vectors for each pixel in a 3x3 window centered on the center pixel of the provided window.
  */
 double gradient_ratio(const int *window) {
-    double sum_magnitude = -1, sum_x = 0, sum_y = 0; //Set sum_magnitude to -1 to avoid divide by zero
+    double sum_magnitude = 0, sum_x = 0, sum_y = 0; //Set sum_magnitude to -1 to avoid divide by zero
     for (int i = -1; i < 2; i++) {
         for (int j = -1; j < 2; j++) {
             int inner_window[9];
@@ -118,6 +118,7 @@ double gradient_ratio(const int *window) {
             sum_y += g.y;
         }
     }
+    if (sum_magnitude == 0) return 0.0;
     return sqrt(square(sum_x) + square(sum_y)) / sum_magnitude;
 }
 
