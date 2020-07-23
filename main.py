@@ -12,17 +12,17 @@ def initialize(nbins, nrows, min_lat, min_lon, max_lat, max_lon):
     _cayula.aoi_rows_length.argtypes = (ctypes.c_int, ctypes.c_double, ctypes.c_double)
     _cayula.get_latlon.argtypes = (ctypes.c_int, ctypes.c_int, ctypes.c_double, ctypes.c_double, ctypes.c_double,
                                    ctypes.c_double,
-                                   ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int),
+                                   np.ctypeslib.ndpointer(dtype=np.int, ndim=1), np.ctypeslib.ndpointer(dtype=np.int, ndim=1),
                                    ctypes.POINTER(ctypes.c_double),
-                                   ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_int))
+                                   ctypes.POINTER(ctypes.c_double), np.ctypeslib.ndpointer(dtype=np.int, ndim=1))
     num_aoi_bins = _cayula.aoi_bins_length(nbins, nrows, min_lat, min_lon, max_lat, max_lon)
     num_aoi_rows = _cayula.aoi_rows_length(nrows, min_lat, max_lat)
 
     lats = (ctypes.c_double * num_aoi_bins)()
     lons = (ctypes.c_double * num_aoi_bins)()
-    basebins = (ctypes.c_int * num_aoi_rows)()
-    nbins_in_row = (ctypes.c_int * num_aoi_rows)()
-    aoi_bins = (ctypes.c_int * num_aoi_bins)()
+    basebins = np.zeros(num_aoi_rows, dtype=np.int)
+    nbins_in_row = np.zeros(num_aoi_rows, dtype=np.int)
+    aoi_bins = np.zeros(num_aoi_bins,dtype=np.int)
     _cayula.get_latlon(nbins, nrows, min_lat, min_lon, max_lat, max_lon, basebins, nbins_in_row, lats, lons, aoi_bins)
 
     return basebins, nbins_in_row, lats, lons, num_aoi_rows, num_aoi_bins, aoi_bins
@@ -52,11 +52,11 @@ def sied(data, nbins, nrows, ndata_bins, data_bins, aoi_bins, basebins, nbins_in
     _cayula = ctypes.CDLL('./sied.so')
     _cayula.initialize.argtypes = (np.ctypeslib.ndpointer(dtype=np.double, ndim=1, shape=(ndata_bins,)), np.ctypeslib.ndpointer(dtype=np.int, ndim=1, shape=(nbins,)),
                                    ctypes.c_int, ctypes.c_int, np.ctypeslib.ndpointer(dtype=np.int, ndim=1, shape=(ndata_bins,)), np.ctypeslib.ndpointer(dtype=np.int, ndim=1))
-    initial_data = np.zeros(nbins)
+    initial_data = np.zeros(nbins, dtype=np.int)
     _cayula.initialize(data, initial_data, nbins, ndata_bins, data_bins, aoi_bins)
     _cayula.cayula.argtypes = (np.ctypeslib.ndpointer(dtype=np.int, ndim=1, shape=(nbins,)), np.ctypeslib.ndpointer(dtype=np.int, ndim=1, shape=(nbins,)),
                                ctypes.c_int, ctypes.c_int, np.ctypeslib.ndpointer(dtype=np.int, ndim=1, shape=(nrows,)), np.ctypeslib.ndpointer(dtype=np.int, ndim=1, shape=(nrows,)))
-    out_data = np.full(nbins, -999)
+    out_data = np.full(nbins, -999, dtype=np.int)
     _cayula.cayula(initial_data, out_data, nbins, nrows, nbins_in_row, basebins)
     return out_data
 
@@ -112,6 +112,7 @@ def map_files(directory, latmin, latmax, lonmin, lonmax):
         out_data = sied(data, num_aoi_bins, num_aoi_rows, len(data_bins), data_bins, aoi_bins, basebins, nbins_in_row)
         df = pd.DataFrame({"Latitude": lats, "Longitude": lons, "Data": out_data})
         df = df[df["Data"] > -1]
+        print(df.groupby("Data").count())
         year_month = dataset.time_coverage_start[:4]
         date = dataset.time_coverage_start[:10]
         if "SNPP" in file:
