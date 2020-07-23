@@ -50,19 +50,15 @@ def get_params_modis(dataset, data_str):
 
 def sied(data, nbins, nrows, ndata_bins, data_bins, aoi_bins, basebins, nbins_in_row):
     _cayula = ctypes.CDLL('./sied.so')
-    _cayula.initialize.argtypes = (ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_int),
-                                   ctypes.c_int, ctypes.c_int, ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int))
-    in_data = (ctypes.c_double * ndata_bins)(*data)
-    out_data = (ctypes.c_int * nbins)()
-    data_bins = (ctypes.c_int * ndata_bins)(*data_bins)
-    _cayula.initialize(in_data, out_data, nbins, ndata_bins, data_bins, aoi_bins)
-    _cayula.cayula.argtypes = (ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int),
-                               ctypes.c_int, ctypes.c_int, ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int))
-
-    in_data = out_data
-    out_data = (ctypes.c_int * nbins)()
-    _cayula.cayula(in_data, out_data, nbins, nrows, nbins_in_row, basebins)
-    return np.array(out_data, dtype="int8")
+    _cayula.initialize.argtypes = (np.ctypeslib.ndpointer(dtype=np.double, ndim=1, shape=(ndata_bins,)), np.ctypeslib.ndpointer(dtype=np.int, ndim=1, shape=(nbins,)),
+                                   ctypes.c_int, ctypes.c_int, np.ctypeslib.ndpointer(dtype=np.int, ndim=1, shape=(ndata_bins,)), np.ctypeslib.ndpointer(dtype=np.int, ndim=1))
+    initial_data = np.zeros(nbins)
+    _cayula.initialize(data, initial_data, nbins, ndata_bins, data_bins, aoi_bins)
+    _cayula.cayula.argtypes = (np.ctypeslib.ndpointer(dtype=np.int, ndim=1, shape=(nbins,)), np.ctypeslib.ndpointer(dtype=np.int, ndim=1, shape=(nbins,)),
+                               ctypes.c_int, ctypes.c_int, np.ctypeslib.ndpointer(dtype=np.int, ndim=1, shape=(nrows,)), np.ctypeslib.ndpointer(dtype=np.int, ndim=1, shape=(nrows,)))
+    out_data = np.full(nbins, -999)
+    _cayula.cayula(initial_data, out_data, nbins, nrows, nbins_in_row, basebins)
+    return out_data
 
 
 def map_files(directory, latmin, latmax, lonmin, lonmax):
