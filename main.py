@@ -90,13 +90,13 @@ def map_files(directory, latmin, latmax, lonmin, lonmax):
             files.append(directory + "/" + file)
 
     dataset = Dataset(files[0])
-    ntotal_bins, nrows, data_bins, data, date = get_params_modis(dataset, "chlor_a")
+    ntotal_bins, nrows, data_bins, data, date = get_params_modis(dataset, "sst4")
     basebins, nbins_in_row, lats, lons, num_aoi_rows, num_aoi_bins, aoi_bins = initialize(ntotal_bins, nrows, 20., -180.,
                                                                                           80., -110.)
     dataset.close()
     for file in files:
         dataset = Dataset(file)
-        ntotal_bins, nrows, data_bins, data, date = get_params_modis(dataset, "chlor_a")
+        ntotal_bins, nrows, data_bins, data, date = get_params_modis(dataset, "sst4")
 
         out_data = sied(data, num_aoi_bins, num_aoi_rows, len(data_bins), data_bins, aoi_bins, basebins, nbins_in_row)
         df = pd.DataFrame({"Latitude": list(lats), "Longitude": list(lons), "Data": out_data})
@@ -106,7 +106,7 @@ def map_files(directory, latmin, latmax, lonmin, lonmax):
         if file.endswith("SNPP_CHL.nc"):
             outfile = date + "viirs_chlor.csv"
         else:
-            outfile = date + '_chlor.csv'
+            outfile = date + '_sst.csv'
         dataset.close()
         if not os.path.exists(cwd + "/out/" + year_month):
             os.makedirs(cwd + "/out/" + year_month)
