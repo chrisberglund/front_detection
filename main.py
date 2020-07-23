@@ -5,27 +5,52 @@ import numpy as np
 import pandas as pd
 from multiprocessing import Pool, cpu_count
 
-
-def initialize(nbins, nrows, min_lat, min_lon, max_lat, max_lon):
+class edgeDetector:
     _cayula = ctypes.CDLL('./sied.so')
-    _cayula.aoi_bins_length.argtypes = (ctypes.c_int, ctypes.c_int, ctypes.c_double, ctypes.c_double, ctypes.c_double, ctypes.c_double)
-    _cayula.aoi_rows_length.argtypes = (ctypes.c_int, ctypes.c_double, ctypes.c_double)
-    _cayula.get_latlon.argtypes = (ctypes.c_int, ctypes.c_int, ctypes.c_double, ctypes.c_double, ctypes.c_double,
-                                   ctypes.c_double,
-                                   np.ctypeslib.ndpointer(dtype=np.int, ndim=1), np.ctypeslib.ndpointer(dtype=np.int, ndim=1),
-                                   ctypes.POINTER(ctypes.c_double),
-                                   ctypes.POINTER(ctypes.c_double), np.ctypeslib.ndpointer(dtype=np.int, ndim=1))
-    num_aoi_bins = _cayula.aoi_bins_length(nbins, nrows, min_lat, min_lon, max_lat, max_lon)
-    num_aoi_rows = _cayula.aoi_rows_length(nrows, min_lat, max_lat)
 
-    lats = (ctypes.c_double * num_aoi_bins)()
-    lons = (ctypes.c_double * num_aoi_bins)()
-    basebins = np.zeros(num_aoi_rows, dtype=np.int)
-    nbins_in_row = np.zeros(num_aoi_rows, dtype=np.int)
-    aoi_bins = np.zeros(num_aoi_bins,dtype=np.int)
-    _cayula.get_latlon(nbins, nrows, min_lat, min_lon, max_lat, max_lon, basebins, nbins_in_row, lats, lons, aoi_bins)
+    def __find_num_aoi_bins(self, nbins, nrows, min_lat, min_lon, max_lat, max_lon):
+        _cayula.aoi_bins_length.argtypes = (ctypes.c_int, ctypes.c_int, ctypes.c_double, ctypes.c_double, ctypes.c_double, ctypes.c_double)
+        _cayula.aoi_rows_length.argtypes = (ctypes.c_int, ctypes.c_double, ctypes.c_double)
+        num_aoi_bins = _cayula.aoi_bins_length(nbins, nrows, min_lat, min_lon, max_lat, max_lon)
+        num_aoi_rows = _cayula.aoi_rows_length(nrows, min_lat, max_lat)
 
-    return basebins, nbins_in_row, lats, lons, num_aoi_rows, num_aoi_bins, aoi_bins
+        return num_aoi_bins, num_aoi_rows
+
+    def __find_aoi_bins(self):
+        _cayula.get_latlon.argtypes = (ctypes.c_int, ctypes.c_int, ctypes.c_double, ctypes.c_double, ctypes.c_double,
+                                       ctypes.c_double,
+                                       ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int),
+                                       ctypes.POINTER(ctypes.c_double),
+                                       ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_int))
+
+        lats = (ctypes.c_double * self.num_aoi_bins)()
+        lons = (ctypes.c_double * self.num_aoi_bins)()
+        basebins = (ctypes.c_int * self.num_aoi_rows)()
+        nbins_in_row = (ctypes.c_int * self.num_aoi_rows)()
+        aoi_bins = (ctypes.c_int * self.num_aoi_rows)()
+        _cayula.get_latlon(self.nbins, self.nrows, self.min_lat, self.min_lon, self.max_lat, self.max_lon, basebins, nbins_in_row, lats, lons, aoi_bins)
+        return lats, lons, basebins, nbins_in_row, aoi_bins
+
+    def __init__(self, nbins, nrows, min_lat, min_lon, max_lat, max_lon):
+        self.nbins = nbins
+        self.nrows = nrows
+        self.min_lat = min_lat
+        self.min_lon = min_lon
+        self.max_lat = max_lat
+        self.max_lon = max_lon
+        self.num_aoi_bins, self.num_aoi_rows = self.__find_num_aoi_bins(nbins, nrows, min_lat, min_lon, max_lat, max_lon)
+        self.lats, self.lons, self.basebins, self.nbins_in_row, self.aoi_bins = self.__find_aoi_bins()
+
+    def sied(self, data, ndata_bins, data_bins):
+        _cayula.initialize.argtypes = (ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_int),
+                                       ctypes.c_int, ctypes.c_int,ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int))
+        aoi_data = (ctypes.c_int * self.num_aoi_bins)()
+        _cayula.initialize(data, aoi_data, self.nbins, ndata_bins, data_bins, self.aoi_bins)
+        _cayula.cayula.argtypes = (ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int),
+                                   ctypes.c_int, ctypes.c_int, ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int))
+        out_data = (ctypes.c_int * self.num_aoi_bins)()
+        _cayula.cayula(initial_data, out_data, nbins, nrows, nbins_in_row, basebins)
+        return np.ctypeslib.as_array(out_data, shape=(self.num_aoi_bins,))
 
 
 def get_params_modis(dataset, data_str):
@@ -46,20 +71,6 @@ def get_params_modis(dataset, data_str):
     date = dataset.time_coverage_start
 
     return total_bins, nrows, bins, data, date
-
-
-def sied(data, nbins, nrows, ndata_bins, data_bins, aoi_bins, basebins, nbins_in_row):
-    _cayula = ctypes.CDLL('./sied.so')
-    _cayula.initialize.argtypes = (np.ctypeslib.ndpointer(dtype=np.double, ndim=1, shape=(ndata_bins,)), np.ctypeslib.ndpointer(dtype=np.int, ndim=1, shape=(nbins,)),
-                                   ctypes.c_int, ctypes.c_int, np.ctypeslib.ndpointer(dtype=np.int, ndim=1, shape=(ndata_bins,)), np.ctypeslib.ndpointer(dtype=np.int, ndim=1))
-    initial_data = np.zeros(nbins, dtype=np.int)
-    _cayula.initialize(data, initial_data, nbins, ndata_bins, data_bins, aoi_bins)
-    _cayula.cayula.argtypes = (np.ctypeslib.ndpointer(dtype=np.int, ndim=1, shape=(nbins,)), np.ctypeslib.ndpointer(dtype=np.int, ndim=1, shape=(nbins,)),
-                               ctypes.c_int, ctypes.c_int, np.ctypeslib.ndpointer(dtype=np.int, ndim=1, shape=(nrows,)), np.ctypeslib.ndpointer(dtype=np.int, ndim=1, shape=(nrows,)))
-    out_data = np.full(nbins, -999, dtype=np.int)
-    _cayula.cayula(initial_data, out_data, nbins, nrows, nbins_in_row, basebins)
-    return out_data
-
 
 def map_files(directory, latmin, latmax, lonmin, lonmax):
     """
