@@ -42,17 +42,25 @@ class EdgeDetector:
         self.num_aoi_bins, self.num_aoi_rows = self.__find_num_aoi_bins(nbins, nrows, min_lat, min_lon, max_lat, max_lon)
         self.lats, self.lons, self.basebins, self.nbins_in_row, self.aoi_bins = self.__find_aoi_bins()
 
-    def sied(self, data, ndata_bins, data_bins):
+    def sied(self, data, data_bins):
         _cayula = ctypes.CDLL('./sied.so')
+        data_arr = (ctypes.c_double * len(data_bins))(*data)
+        data_bins_arr = (ctypes.c_int * len(data_bins))(*data_bins)
         _cayula.initialize.argtypes = (ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_int),
                                        ctypes.c_int, ctypes.c_int,ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int))
         aoi_data = (ctypes.c_int * self.num_aoi_bins)()
-        _cayula.initialize(data, aoi_data, self.nbins, ndata_bins, data_bins, self.aoi_bins)
+        _cayula.initialize(data_arr, aoi_data, self.nbins, len(data_bins), data_bins_arr, self.aoi_bins)
         _cayula.cayula.argtypes = (ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int),
                                    ctypes.c_int, ctypes.c_int, ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int))
         out_data = (ctypes.c_int * self.num_aoi_bins)()
-        _cayula.cayula(initial_data, out_data, nbins, nrows, nbins_in_row, basebins)
-        return np.ctypeslib.as_array(out_data, shape=(self.num_aoi_bins,))
+        _cayula.cayula(aoi_data, out_data, self.nbins, self.nrows, self.nbins_in_row, self.basebins)
+        test = out_data[:self.num_aoi_bins - 1]
+        test2 = [x for x in test if x >= 0]
+        counter = 0
+        df = pd.DataFrame(data={"Data": test2})
+        df["Foo"] = 1
+        print(df.groupby("Data").count())
+        return test2
 
 
 def get_params_modis(dataset, data_str):
@@ -112,20 +120,16 @@ def map_files(directory, latmin, latmax, lonmin, lonmax):
                 files.append(directory + "/" + file)
 
     dataset = Dataset(files[0])
-    ntotal_bins, nrows, data_bins, data, date = get_params_modis(dataset, "sst4")
-    basebins, nbins_in_row, lats, lons, num_aoi_rows, num_aoi_bins, aoi_bins = initialize(ntotal_bins, nrows, 20., -180.,
-                                                                                          80., -110.)
-    lats = np.array(lats)
-    lons = np.array(lons)
+    ntotal_bins, nrows, data_bins, data, date = get_params_modis(dataset, "sst")
+    detector = EdgeDetector(ntotal_bins, nrows, -90, -180, 90, 180)
     dataset.close()
     for file in files:
         dataset = Dataset(file)
-        ntotal_bins, nrows, data_bins, data, date = get_params_modis(dataset, "sst4")
-
-        out_data = sied(data, num_aoi_bins, num_aoi_rows, len(data_bins), data_bins, aoi_bins, basebins, nbins_in_row)
-        df = pd.DataFrame({"Latitude": lats, "Longitude": lons, "Data": out_data})
-        df = df[df["Data"] > -1]
-        print(df.groupby("Data").count())
+        ntotal_bins, nrows, data_bins, data, date = get_params_modis(dataset, "sst")
+        out_data = detector.sied(data, data_bins)
+        df = pd.DataFrame(data={"Data":out_data})
+        #print(df.groupby("Data").count())
+        """
         year_month = dataset.time_coverage_start[:4]
         date = dataset.time_coverage_start[:10]
         if "SNPP" in file:
@@ -141,7 +145,7 @@ def map_files(directory, latmin, latmax, lonmin, lonmax):
             os.makedirs(cwd + "/out/" + year_month)
         df.to_csv(cwd + "/out/" + year_month + "/" + outfile, index=False)
         print("Saving " + outfile)
-
+        """
 
 def main():
     cwd = os.getcwd()
