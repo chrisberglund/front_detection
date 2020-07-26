@@ -54,13 +54,12 @@ class EdgeDetector:
                                    ctypes.c_int, ctypes.c_int, ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int))
         out_data = (ctypes.c_int * self.num_aoi_bins)()
         _cayula.cayula(aoi_data, out_data, self.nbins, self.nrows, self.nbins_in_row, self.basebins)
-        test = out_data[:self.num_aoi_bins - 1]
-        test2 = [x for x in test if x >= 0]
-        counter = 0
-        df = pd.DataFrame(data={"Data": test2})
-        df["Foo"] = 1
+
+        df = pd.DataFrame(data={"Data": out_data[:self.num_aoi_bins]})
+        df["latitude"] =  self.lats[:self.num_aoi_bins]
+        df["Longitude"] = self.lons[:self.num_aoi_bins]
         print(df.groupby("Data").count())
-        return test2
+        return df
 
 
 def get_params_modis(dataset, data_str):
@@ -127,7 +126,6 @@ def map_files(directory, latmin, latmax, lonmin, lonmax):
         dataset = Dataset(file)
         ntotal_bins, nrows, data_bins, data, date = get_params_modis(dataset, "sst")
         out_data = detector.sied(data, data_bins)
-        df = pd.DataFrame(data={"Data":out_data})
         #print(df.groupby("Data").count())
         """
         year_month = dataset.time_coverage_start[:4]
