@@ -105,6 +105,7 @@ void initialize(double *in_data, int *out_data, int nbins, int ndata_bins, int *
     }
 
     for (int i = 0; i < nbins; i++) {
+        out_data[i] = FILL_VALUE
         int idx = binary_search(data_bins, 0, ndata_bins, bins[i]);
         if (idx == -1) {
             out_data[i] = FILL_VALUE;
@@ -112,5 +113,10 @@ void initialize(double *in_data, int *out_data, int nbins, int ndata_bins, int *
             double ratio = (double)(in_data[idx] + fabs(min_value)) / fabs(max_value - min_value);
             out_data[i] = (int) (ratio * 255);
         }
+    }
+
+    for (int i = 0; i < ndata_bins; i++) {
+        double ratio = (double)(in_data[idx] + fabs(min_value)) / fabs(max_value - min_value);
+        out_data[] = (int) (ratio * 255);
     }
 }

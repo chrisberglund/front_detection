@@ -407,7 +407,9 @@ int follow_contour(ContourPoint *prev, const int *data, const int *filtered_data
  */
 void contour(int *data, int *filtered_data, int *out_data, int nbins, int nrows, const int *nbins_in_row, const int *basebins) {
     int *pixel_in_contour = malloc(sizeof(int) * nbins);
-    memset(pixel_in_contour, 0, nbins * sizeof(int));
+    for (int i = 0; i < nbins; i++) {
+        pixel_in_contour[i] = filtered_data[i] == FILL_VALUE ? 1 : 0;
+    }
     Contour *head = NULL;
     Contour *current = NULL;
     for (int i = 2; i < nrows - 2; i++) {

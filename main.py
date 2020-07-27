@@ -42,23 +42,44 @@ class EdgeDetector:
         self.num_aoi_bins, self.num_aoi_rows = self.__find_num_aoi_bins(nbins, nrows, min_lat, min_lon, max_lat, max_lon)
         self.lats, self.lons, self.basebins, self.nbins_in_row, self.aoi_bins = self.__find_aoi_bins()
 
+    def initialize(self, data, data_bins):
+        print("test")
+        min_val = np.min(data)
+        max_val = np.max(data)
+        int_data = np.floor(255 * (data + abs(min_val)) / abs(max_val - min_val)).astype(np.int)
+        index = range(0, len(self.aoi_bins))
+        aoi_bins = np.array(self.aoi_bins[:])
+        sorted_index = np.searchsorted(aoi_bins, data_bins)
+
+        yindex = np.take(index, sorted_index, mode="clip")
+        mask = aoi_bins[yindex] == data_bins
+
+        aoi_idx = yindex[mask]
+
+        index = range(0, len(data_bins))
+        sorted_index = np.searchsorted(data_bins, aoi_bins)
+
+        yindex = np.take(index, sorted_index, mode="clip")
+        mask = data_bins[yindex] == aoi_bins
+
+        data_idx = yindex[mask]
+
+        aoi_data = np.full(self.num_aoi_bins, -999)
+        aoi_data[aoi_idx] = int_data[data_idx]
+        return aoi_data
+
+
     def sied(self, data, data_bins):
         _cayula = ctypes.CDLL('./sied.so')
-        data_arr = (ctypes.c_double * len(data_bins))(*data)
-        data_bins_arr = (ctypes.c_int * len(data_bins))(*data_bins)
-        _cayula.initialize.argtypes = (ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_int),
-                                       ctypes.c_int, ctypes.c_int,ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int))
-        aoi_data = (ctypes.c_int * self.num_aoi_bins)()
-        _cayula.initialize(data_arr, aoi_data, self.nbins, len(data_bins), data_bins_arr, self.aoi_bins)
+        aoi_data = self.initialize(data, data_bins)
+        aoi_data_arr = (ctypes.c_int * self.num_aoi_bins)(*aoi_data)
         _cayula.cayula.argtypes = (ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int),
                                    ctypes.c_int, ctypes.c_int, ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int))
         out_data = (ctypes.c_int * self.num_aoi_bins)()
-        _cayula.cayula(aoi_data, out_data, self.nbins, self.nrows, self.nbins_in_row, self.basebins)
-
+        _cayula.cayula(aoi_data_arr, out_data, self.num_aoi_bins, self.num_aoi_rows, self.nbins_in_row, self.basebins)
         df = pd.DataFrame(data={"Data": out_data[:self.num_aoi_bins]})
-        df["latitude"] =  self.lats[:self.num_aoi_bins]
+        df["Latitude"] =  self.lats[:self.num_aoi_bins]
         df["Longitude"] = self.lons[:self.num_aoi_bins]
-        print(df.groupby("Data").count())
         return df
 
 
@@ -117,7 +138,6 @@ def map_files(directory, latmin, latmax, lonmin, lonmax):
         if file.endswith(".nc"):
             if year not in outfiles:
                 files.append(directory + "/" + file)
-
     dataset = Dataset(files[0])
     ntotal_bins, nrows, data_bins, data, date = get_params_modis(dataset, "sst")
     detector = EdgeDetector(ntotal_bins, nrows, -90, -180, 90, 180)
@@ -125,9 +145,9 @@ def map_files(directory, latmin, latmax, lonmin, lonmax):
     for file in files:
         dataset = Dataset(file)
         ntotal_bins, nrows, data_bins, data, date = get_params_modis(dataset, "sst")
-        out_data = detector.sied(data, data_bins)
-        #print(df.groupby("Data").count())
-        """
+        df = detector.sied(data, data_bins)
+        df = df[df["Data"] > -1]
+        print(df.groupby("Data").count())
         year_month = dataset.time_coverage_start[:4]
         date = dataset.time_coverage_start[:10]
         if "SNPP" in file:
@@ -143,7 +163,6 @@ def map_files(directory, latmin, latmax, lonmin, lonmax):
             os.makedirs(cwd + "/out/" + year_month)
         df.to_csv(cwd + "/out/" + year_month + "/" + outfile, index=False)
         print("Saving " + outfile)
-        """
 
 def main():
     cwd = os.getcwd()
