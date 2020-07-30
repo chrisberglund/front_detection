@@ -7,22 +7,7 @@ from multiprocessing import Pool, cpu_count
 
 class EdgeDetector:
 
-    def __find_num_aoi_bins(self, nbins, nrows, min_lat, min_lon, max_lat, max_lon):
-        _cayula = ctypes.CDLL('./sied.so')
-        _cayula.aoi_bins_length.argtypes = (ctypes.c_int, ctypes.c_int, ctypes.c_double, ctypes.c_double, ctypes.c_double, ctypes.c_double)
-        _cayula.aoi_rows_length.argtypes = (ctypes.c_int, ctypes.c_double, ctypes.c_double)
-        num_aoi_bins = _cayula.aoi_bins_length(nbins, nrows, min_lat, min_lon, max_lat, max_lon)
-        num_aoi_rows = _cayula.aoi_rows_length(nrows, min_lat, max_lat)
-
-        return num_aoi_bins, num_aoi_rows
-
     def __find_aoi_bins(self):
-        _cayula = ctypes.CDLL('./sied.so')
-        _cayula.get_latlon.argtypes = (ctypes.c_int, ctypes.c_int, ctypes.c_double, ctypes.c_double, ctypes.c_double,
-                                       ctypes.c_double,
-                                       ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int),
-                                       ctypes.POINTER(ctypes.c_double),
-                                       ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_int))
         row_lats= (np.arange(0,  self.nrows, dtype=np.double) + 0.5) * 180. / self.nrows - 90
         nbins_in_row = np.floor(2 * self.nrows * np.cos(row_lats * np.pi / 180.) + 0.5).astype(np.int)
         lons = []
@@ -45,7 +30,8 @@ class EdgeDetector:
         self.min_lon = min_lon
         self.max_lat = max_lat
         self.max_lon = max_lon
-        self.num_aoi_bins, self.num_aoi_rows = self.__find_num_aoi_bins(nbins, nrows, min_lat, min_lon, max_lat, max_lon)
+        self.num_aoi_bins = nbins
+        self.num_aoi_rows =  nrows
         self.lats, self.lons, self.basebins, self.nbins_in_row, self.aoi_bins = self.__find_aoi_bins()
 
     def initialize(self, data, data_bins):
@@ -154,9 +140,17 @@ def map_files(directory, latmin, latmax, lonmin, lonmax):
         df = detector.sied(data, data_bins)
         df = df[df["Data"] > -1]
         df = df[(df["Latitude"] >= 20.) & (df["Latitude"] <= 80) & (df["Longitude"] < -120.)]
+        year = date[:4]
+        name = date[:10]
         print(df.groupby("Data").count())
+        outfile = "./out/2002/" + name + "_sst.csv"
+
+        df.to_csv(outfile)
+        print(outfile)
+        dataset.close()
+        """
         year_month = dataset.time_coverage_start[:4]
-        date = dataset.time_coverage_start[:10]
+        date = dataset.time_coverage_start[:10]s
         if "SNPP" in file:
             outfile = date + "viirs_chlor.csv"
         elif "SEASTAR" in file:
@@ -170,6 +164,7 @@ def map_files(directory, latmin, latmax, lonmin, lonmax):
             os.makedirs(cwd + "/out/" + year_month)
         df.to_csv(cwd + "/out/" + year_month + "/" + outfile, index=False)
         print("Saving " + outfile)
+        """
 
 def main():
     cwd = os.getcwd()

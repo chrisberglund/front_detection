@@ -5,6 +5,8 @@
 #include "helpers.h"
 #include "histogram.h"
 #include "cayula.h"
+#include <stdio.h>
+
 
 
 #define CRIT_VALUE 0.7
@@ -32,6 +34,7 @@ void get_histogram(const int *data, int *histogram) {
     int area = squarei(WINDOW_WIDTH);
     for (int i = 0; i < area; i++) {
         if (data[i] != FILL_VALUE) {
+            if (data[i] > 255 || data[i] < 0) printf("%d", i);
             histogram[data[i]]++;
         }
     }

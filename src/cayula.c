@@ -6,7 +6,6 @@
 #include "stdio.h"
 #include "filter.h"
 #include "cayula.h"
-#include "initialize.h"
 
 void cayula(int *data, int *out_data, int n_bins, int nrows, int *n_bins_in_row, int *basebins) {
     int *filtered_data = malloc(n_bins * sizeof(int));
@@ -53,11 +52,6 @@ void cayula(int *data, int *out_data, int n_bins, int nrows, int *n_bins_in_row,
     free(window);
     free(bin_window);
     contour(edge_pixels, filtered_data, out_data, n_bins, nrows, n_bins_in_row, basebins);
-    for (int i = 0; i < n_bins; i++) {
-        if (filtered_data[i] == FILL_VALUE) {
-            out_data[i] = -1;
-        }
-    }
     free(filtered_data);
     free(edge_pixels);
 }
