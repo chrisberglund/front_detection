@@ -9,6 +9,7 @@
 
 void cayula(int *data, int *out_data, int n_bins, int nrows, int *n_bins_in_row, int *basebins) {
     int *filtered_data = malloc(n_bins * sizeof(int));
+    int *edge_pixels = malloc(n_bins * sizeof(int));
 
     median_filter(data, filtered_data, n_bins, nrows, n_bins_in_row, basebins);
 
@@ -18,11 +19,11 @@ void cayula(int *data, int *out_data, int n_bins, int nrows, int *n_bins_in_row,
         } else {
             out_data[i] = 0;
         }
+        edge_pixels = 0;
     }
 
     int half_step = WINDOW_WIDTH / 2;
     int area = WINDOW_WIDTH * WINDOW_WIDTH;
-    int *edge_pixels = malloc(n_bins * sizeof(int));
     int *edge_window = malloc(WINDOW_AREA * sizeof(int));
     int *window = malloc(WINDOW_AREA * sizeof(int));
     int *bin_window = malloc(WINDOW_AREA * sizeof(int));
