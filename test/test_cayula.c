@@ -6,7 +6,6 @@
 #include "contour.h"
 #include "filter.h"
 #include "histogram.h"
-#include "initialize.h"
 
 void setUp(void)
 {

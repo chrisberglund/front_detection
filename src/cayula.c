@@ -3,7 +3,6 @@
 #include "helpers.h"
 #include "cohesion.h"
 #include "contour.h"
-#include "stdio.h"
 #include "filter.h"
 #include "cayula.h"
 
@@ -26,7 +25,7 @@ void cayula(int *data, int *out_data, int n_bins, int nrows, int *n_bins_in_row,
     int *edge_window = malloc(WINDOW_AREA * sizeof(int));
     int *window = malloc(WINDOW_AREA * sizeof(int));
     int *bin_window = malloc(WINDOW_AREA * sizeof(int));
-    for (int i = 31; i < nrows - 32; i += WINDOW_WIDTH) {
+    for (int i = half_step - 1; i < nrows - half_step; i += WINDOW_WIDTH) {
         for (int j = half_step - 1; j < n_bins_in_row[i] - half_step; j += WINDOW_WIDTH) {
             if (n_bins_in_row[i - WINDOW_WIDTH + 1] < WINDOW_WIDTH || n_bins_in_row[i + WINDOW_WIDTH] < WINDOW_WIDTH) {
                 continue;

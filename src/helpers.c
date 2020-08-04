@@ -1,6 +1,5 @@
 #include "helpers.h"
 #include "cayula.h"
-#include <stdio.h>
 
 /*
  * Function:  get_window

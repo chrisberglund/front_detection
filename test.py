@@ -111,4 +111,3 @@ class TestSum(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
->>>>>>> c11738c5f23dafbecf0ded29ec7b22e13677d11e

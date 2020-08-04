@@ -2,7 +2,6 @@
 * Functions for applying the median filter to an array of bins using sliding 3x3 window
 */
 #include <math.h>
-#include <stdio.h>
 #include "filter.h"
 #include "helpers.h"
 #include "cayula.h"

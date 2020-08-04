@@ -16,11 +16,15 @@ class EdgeDetector:
         for i in range(0, self.nrows):
             lons.extend((360. * (np.arange(0, nbins_in_row[i], dtype=np.double) + 0.5) / nbins_in_row[i] - 180.).tolist())
 
+        lats_idx = ((lats >= self.min_lat) & (lats <= self.max_lat)).nonzero()
         lons = np.array(lons)
+        lons_idx = ((lats >= self.min_lon) & (lons <= self.max_lon)).nonzero()
+        aoi_bins = np.intersect1d(lats_idx, lons_idx)
+        _, nbins_in_row = np.unique(lats[aoi_bins], return_counts=True)
         basebins = np.cumsum(nbins_in_row) - nbins_in_row
         basebins = (ctypes.c_int * self.num_aoi_rows)(*basebins)
         nbins_in_row = (ctypes.c_int * self.num_aoi_rows)(*nbins_in_row)
-        aoi_bins = (ctypes.c_int * self.num_aoi_bins)(*np.arange(self.nbins))
+        aoi_bins = (ctypes.c_int * self.num_aoi_bins)(aoi_bins)
         return lats, lons, basebins, nbins_in_row, aoi_bins
 
     def __init__(self, nbins, nrows, min_lat, min_lon, max_lat, max_lon):
@@ -132,7 +136,7 @@ def map_files(directory, latmin, latmax, lonmin, lonmax):
 
     dataset = Dataset(files[0])
     ntotal_bins, nrows, data_bins, data, date = get_params_modis(dataset, "sst")
-    detector = EdgeDetector(ntotal_bins, nrows, -90, -180, 90, 180)
+    detector = EdgeDetector(ntotal_bins, nrows, 20, -180, 80, -120)
     dataset.close()
     for file in files:
         dataset = Dataset(file)
@@ -140,17 +144,11 @@ def map_files(directory, latmin, latmax, lonmin, lonmax):
         df = detector.sied(data, data_bins)
         df = df[df["Data"] > -1]
         df = df[(df["Latitude"] >= 20.) & (df["Latitude"] <= 80) & (df["Longitude"] < -120.)]
-        year = date[:4]
-        name = date[:10]
-        print(df.groupby("Data").count())
-        outfile = "./out/2002/" + name + "_sst.csv"
 
-        df.to_csv(outfile)
-        print(outfile)
-        dataset.close()
-        """
+        print(df.groupby("Data").count())
+
         year_month = dataset.time_coverage_start[:4]
-        date = dataset.time_coverage_start[:10]s
+        date = dataset.time_coverage_start[:10]
         if "SNPP" in file:
             outfile = date + "viirs_chlor.csv"
         elif "SEASTAR" in file:
@@ -164,7 +162,7 @@ def map_files(directory, latmin, latmax, lonmin, lonmax):
             os.makedirs(cwd + "/out/" + year_month)
         df.to_csv(cwd + "/out/" + year_month + "/" + outfile, index=False)
         print("Saving " + outfile)
-        """
+
 
 def main():
     cwd = os.getcwd()
