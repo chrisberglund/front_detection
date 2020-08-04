@@ -143,7 +143,6 @@ def map_files(directory, latmin, latmax, lonmin, lonmax):
         ntotal_bins, nrows, data_bins, data, date = get_params_modis(dataset, "sst")
         df = detector.sied(data, data_bins)
         df = df[df["Data"] > -1]
-        df = df[(df["Latitude"] >= 20.) & (df["Latitude"] <= 80) & (df["Longitude"] < -120.)]
 
         print(df.groupby("Data").count())
 
