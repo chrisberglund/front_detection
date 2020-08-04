@@ -121,21 +121,21 @@ double gradient_ratio(const int *window) {
     return sqrt(square(sum_x) + square(sum_y)) / sum_magnitude;
 }
 
- Contour *new_contour(Contour *prev, int bin) {
-     Contour *n = malloc(sizeof(Contour));
-     n->prev = prev;
-     n->next = NULL;
-     n->length = 0;
+Contour *new_contour(Contour *prev, int bin) {
+    Contour *n = malloc(sizeof(Contour));
+    n->prev = prev;
+    n->next = NULL;
+    n->length = 0;
 
-     if (prev != NULL) prev -> next = n;
+    if (prev != NULL) prev -> next = n;
 
-     ContourPoint *c = malloc(sizeof(ContourPoint));
-     c->bin = bin;
-     c->prev = NULL;
-     c->next = NULL;
-     n->first_point = c;
-     return n;
- }
+    ContourPoint *c = malloc(sizeof(ContourPoint));
+    c->bin = bin;
+    c->prev = NULL;
+    c->next = NULL;
+    n->first_point = c;
+    return n;
+}
 
 /*
 * Function:  del_contour
@@ -407,7 +407,9 @@ int follow_contour(ContourPoint *prev, const int *data, const int *filtered_data
  */
 void contour(int *data, int *filtered_data, int *out_data, int nbins, int nrows, const int *nbins_in_row, const int *basebins) {
     int *pixel_in_contour = malloc(sizeof(int) * nbins);
-    memset(pixel_in_contour, 0, nbins * sizeof(int));
+    for (int i = 0; i < nbins; i++) {
+        pixel_in_contour[i] = filtered_data[i] == FILL_VALUE ? 1 : 0;
+    }
     Contour *head = NULL;
     Contour *current = NULL;
     for (int i = 2; i < nrows - 2; i++) {

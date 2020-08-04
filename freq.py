@@ -6,7 +6,7 @@ def front_frequency():
     include_months = ['06','07','08','09','10','11']
     if not os.path.exists(cwd + "/freq"):
         os.makedirs(cwd + "/freq")
-    for year in range(2003, 2019):
+    for year in range(2008, 2009):
         directory = "./out/" + str(year) + "/"
         frequencies = pd.read_csv("./out/"+ str(year) +"/" + os.listdir(directory)[0])
         frequencies["Count"] = 1

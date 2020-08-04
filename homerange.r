@@ -1,8 +1,8 @@
 library(sf)
 library(raster)
-file.names <- dir("sst_freq/", pattern =".csv")
+file.names <- dir("freq/", pattern =".csv")
 for(i in 1:length(file.names)){
-  freq <- read.csv(paste("sst_freq/",file.names[i], sep=""))
+  freq <- read.csv(paste("freq/",file.names[i], sep=""))
   coordinates(freq) <- ~Longitude+Latitude
   proj4string(freq) <- "+proj=longlat"
   #month_freq <- freq[strtoi(freq$Month) == j,]

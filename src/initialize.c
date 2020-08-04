@@ -37,7 +37,7 @@ int aoi_rows_length(int nrows, double min_lat, double max_lat) {
 }
 
 void get_latlon(int nbins, int nrows, double min_lat, double min_lon, double max_lat, double max_lon, int *basebins,
-        int *nbins_in_row, double *lats, double *lons, int *bins) {
+                int *nbins_in_row, double *lats, double *lons, int *bins) {
     int aoi_bin = 0;
     int bin = 0;
     int row = 0;
@@ -105,6 +105,7 @@ void initialize(double *in_data, int *out_data, int nbins, int ndata_bins, int *
     }
 
     for (int i = 0; i < nbins; i++) {
+        out_data[i] = FILL_VALUE
         int idx = binary_search(data_bins, 0, ndata_bins, bins[i]);
         if (idx == -1) {
             out_data[i] = FILL_VALUE;
@@ -112,5 +113,10 @@ void initialize(double *in_data, int *out_data, int nbins, int ndata_bins, int *
             double ratio = (double)(in_data[idx] + fabs(min_value)) / fabs(max_value - min_value);
             out_data[i] = (int) (ratio * 255);
         }
+    }
+
+    for (int i = 0; i < ndata_bins; i++) {
+        double ratio = (double)(in_data[idx] + fabs(min_value)) / fabs(max_value - min_value);
+        out_data[] = (int) (ratio * 255);
     }
 }

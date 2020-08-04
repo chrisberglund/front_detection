@@ -21,7 +21,7 @@
  *      int the number of fill values contained in the window
  */
 int get_window(int bin, int row, int width, const int *data, const int *n_bins_in_row,
-                const int *basebins, int window[]) {
+               const int *basebins, int window[]) {
     int nfill_values = 0;
     int column_neighbor;
     double ratio = ((double) bin - basebins[row]) /  n_bins_in_row[row];
