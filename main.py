@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 from multiprocessing import Pool, cpu_count
 
+
 class EdgeDetector:
 
     def __find_aoi_bins(self):
@@ -63,7 +64,6 @@ class EdgeDetector:
         aoi_data[aoi_idx] = int_data[data_idx]
         return aoi_data
 
-
     def sied(self, data, data_bins):
         _cayula = ctypes.CDLL('./sied.so')
         aoi_data = self.initialize(data, data_bins)
@@ -73,7 +73,7 @@ class EdgeDetector:
         out_data = (ctypes.c_int * self.num_aoi_bins)()
         _cayula.cayula(aoi_data_arr, out_data, self.num_aoi_bins, self.num_aoi_rows, self.nbins_in_row, self.basebins)
         df = pd.DataFrame(data={"Data": out_data[:self.num_aoi_bins]})
-        df["Latitude"] =  self.lats
+        df["Latitude"] = self.lats
         df["Longitude"] = self.lons
         return df
 
