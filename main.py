@@ -21,12 +21,14 @@ class EdgeDetector:
         lons = np.array(lons)
         lons_idx = ((lats >= self.min_lon) & (lons <= self.max_lon)).nonzero()
         aoi_bins = np.intersect1d(lats_idx, lons_idx)
-        _, nbins_in_row = np.unique(lats[aoi_bins], return_counts=True)
+        unique_lats, nbins_in_row = np.unique(lats[aoi_bins], return_counts=True)
         basebins = np.cumsum(nbins_in_row) - nbins_in_row
+        num_aoi_bins = len(aoi_bins)
+        num_aoi_rows = len(unique_lats)
         basebins = (ctypes.c_int * self.num_aoi_rows)(*basebins)
         nbins_in_row = (ctypes.c_int * self.num_aoi_rows)(*nbins_in_row)
         aoi_bins = (ctypes.c_int * self.num_aoi_bins)(aoi_bins)
-        return lats[aoi_bins], lons[aoi_bins], basebins, nbins_in_row, aoi_bins
+        return lats[aoi_bins], lons[aoi_bins], basebins, nbins_in_row, aoi_bins, num_aoi_bins, num_aoi_rows
 
     def __init__(self, nbins, nrows, min_lat, min_lon, max_lat, max_lon):
         self.nbins = nbins
@@ -35,9 +37,7 @@ class EdgeDetector:
         self.min_lon = min_lon
         self.max_lat = max_lat
         self.max_lon = max_lon
-        self.num_aoi_bins = nbins
-        self.num_aoi_rows =  nrows
-        self.lats, self.lons, self.basebins, self.nbins_in_row, self.aoi_bins = self.__find_aoi_bins()
+        self.lats, self.lons, self.basebins, self.nbins_in_row, self.aoi_bins, self.num_aoi_bins, self.num_aoi_rows = self.__find_aoi_bins()
 
     def initialize(self, data, data_bins):
         min_val = np.min(data)
