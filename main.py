@@ -27,7 +27,7 @@ class EdgeDetector:
         num_aoi_rows = len(unique_lats)
         basebins = (ctypes.c_int * num_aoi_rows)(*basebins)
         nbins_in_row = (ctypes.c_int * num_aoi_rows)(*nbins_in_row)
-        aoi_bins = (ctypes.c_int * self.num_aoi_bins)(aoi_bins)
+        aoi_bins = (ctypes.c_int * num_aoi_bins)(aoi_bins)
         return lats[aoi_bins], lons[aoi_bins], basebins, nbins_in_row, aoi_bins, num_aoi_bins, num_aoi_rows
 
     def __init__(self, nbins, nrows, min_lat, min_lon, max_lat, max_lon):
