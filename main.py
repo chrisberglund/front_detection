@@ -128,19 +128,19 @@ def map_files(directory, latmin, latmax, lonmin, lonmax):
         elif file.endswith(".nc"):
             dataset = Dataset(directory + '/' + file)
             date = dataset.time_coverage_start[:10]
-            year = date + '_sst.csv'
+            year = date + '_chlora.csv'
             dataset.close()
         if file.endswith(".nc"):
             if year not in outfiles:
                 files.append(directory + "/" + file)
 
     dataset = Dataset(files[0])
-    ntotal_bins, nrows, data_bins, data, date = get_params_modis(dataset, "sst")
+    ntotal_bins, nrows, data_bins, data, date = get_params_modis(dataset, "chlor_a")
     detector = EdgeDetector(ntotal_bins, nrows, 20, -180, 80, -120)
     dataset.close()
     for file in files:
         dataset = Dataset(file)
-        ntotal_bins, nrows, data_bins, data, date = get_params_modis(dataset, "sst")
+        ntotal_bins, nrows, data_bins, data, date = get_params_modis(dataset, "chlor_a")
         df = detector.sied(data, data_bins)
         df = df[df["Data"] > -1]
 
@@ -155,7 +155,7 @@ def map_files(directory, latmin, latmax, lonmin, lonmax):
         elif "ENVISAT_MERIS" in file:
             outfile = date + "meris_chlor.csv"
         else:
-            outfile = date + '_sst.csv'
+            outfile = date + '_chlora.csv'
         dataset.close()
         if not os.path.exists(cwd + "/out/" + year_month):
             os.makedirs(cwd + "/out/" + year_month)
