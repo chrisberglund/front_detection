@@ -92,7 +92,7 @@ def get_params_modis(dataset, data_str):
     bins = binlist[:, 0].astype("int") - 1
     weights = binlist[:, 3]
     sums = np.array(dataset.groups["level-3_binned_data"][data_str][:].tolist())[:, 0]
-    data = np.log(sums / weights)
+    data = np.log10(sums / weights)
     date = dataset.time_coverage_start
 
     return total_bins, nrows, bins, data, date
